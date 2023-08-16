@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# download latest gcc compiler toolchain from ARM download sites
+# extract
+# export CROSS_COMPILE using absolut path to gcc compiler:
+echo export CROSS_COMPILE=/home/brandon/DE10_wrk/<path to compiler>/bin/<gcc exectuable>
+
+# need to install additional dependecies to compile u-boot
+sudo apt-get install libncurses-dev flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev libmpc-dev libgmp3-dev autoconf bc
+
+# ----------- TO DO ------------#
+# 1. MODIFY U-BOOT
+# need to add "run distro_bootcmd" to the $DEWD/u-boot/include/config_distro_bootcmd.h file otherwise 
+# kernel will not boot
+
+# 2. MODIFY ROOTFS
+# need to change the /etc/network/interfaces GbE eth phy from "eth0" to "end0" for 
+# networking service to not fail on bootup
+
+
+
