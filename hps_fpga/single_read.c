@@ -9,6 +9,7 @@
 
 #define BRIDGE 0xC0000000
 #define BRIDGE_SPAN 0x3C000000
+#define OFFSET 0x0 // register offset from base address 
 
 int main() {
 
@@ -36,13 +37,23 @@ int main() {
 		close(fd);
 		return -3;
 		}
-	a_map = (uint32_t *)(virtual_base + (0x0));
+	a_map = (uint32_t *)(virtual_base + (OFFSET));
 
 	printf("virtual_base: %08X\n", virtual_base);
 	printf("a_map: %08X\n", a_map);
 
-	a = *((uint32_t *) a_map);
-	printf("%08X\n", a);
+	a = *((uint32_t *) a_map); // map memory value to userspace variable
+	printf("%08X\n", a); // print variable
+
+	// clean up by unmapping the memmory space
+	int result = 0;
+	result = munmap(virtual_base, BRIDGE_SPAN);
+	
+	if (result < 0) {
+	  perror("Couldnt unmap bridge.");
+	  close(fd);
+ 	 return -4;
+		}
 
 return 0;
 }
