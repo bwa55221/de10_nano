@@ -16,7 +16,7 @@ sudo mkdir sdcard
 cd sdcard
 
 # Create an image file of 1GB in size.
-sudo dd if=/dev/zero of=sdcard.img bs=1G count=1
+sudo dd if=/dev/zero of=sdcard.img bs=1G count=6
 
 # make image visible as a disk drive
 IMAGE_FILE=$(sudo losetup --show -f sdcard.img)
@@ -73,6 +73,9 @@ sudo cp ../linux-socfpga/arch/arm/boot/zImage fat
 
 # copy the device tree
 sudo cp ../linux-socfpga/arch/arm/boot/dts/custom.dtb fat
+
+# copy the fpga image as "soc_system.rbf"
+sudo cp ../custom_fpga_load.rbf fat/soc_system.rbf
 
 #### Create the extlinux config file for the bootloader. ####
 echo "LABEL Linux Default" | sudo tee -a extlinux.conf
