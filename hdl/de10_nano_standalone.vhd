@@ -5,7 +5,7 @@ use IEEE.numeric_std.all;
 -- name of top level entity must match top level vhdl file name otherwise
 -- compiler returns error "top level entity undefined"
 
-entity top_level is
+entity de10_nano_standalone is
     port(
         FPGA_CLK1_50            : in std_logic;
         RST_N                   : in std_logic;
@@ -26,10 +26,10 @@ entity top_level is
         HPS_DDR3_RZQ            : in std_logic;
         HPS_DDR3_WE_N           : out std_logic
     );
-end entity top_level;
+end entity de10_nano_standalone;
 
 
-architecture rtl of top_level is
+architecture rtl of de10_nano_standalone is
 
 -- COMPONENT DECLARATIONS --
 
