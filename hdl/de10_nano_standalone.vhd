@@ -69,8 +69,31 @@ architecture rtl of de10_nano_standalone is
             reset_reset_n            : in    std_logic                     := '0'              --           reset.reset_n
         );
     end component;
+	 
+	component avmm_slave is
+	     port(
+			  WAIT_REQ        : out std_logic;
+			  READ_DATA       : out std_logic_vector(63 downto 0);
+			  READ_DATA_VALID : out std_logic;
+
+			  CLK					: in std_logic;
+			  WRITE_DATA      : in std_logic_vector(63 downto 0);
+			  ADDRESS         : in std_logic_vector(9 downto 0);
+			  WRITE_CMD       : in std_logic;
+			  READ_CMD        : in std_logic;
+			  BYTE_ENABLE     : in std_logic_vector(7 downto 0);
+			  DEBUG_ACCESS    : in std_logic
+		 );
+		 end component;
 
 --******************* GLUE LOGIC BEGIN **********************--
+
+-- define signals to connect the avmm custom slave to the hps
+signal h2s_wait_req, h2s_read_dv, h2s_write_cmd, h2s_read_cmd, h2s_debug_access : std_logic := '0';
+signal h2s_read_data, h2s_write_data                                            : std_logic_vector(63 downto 0) := (others => '0');
+signal h2s_address                                                              : std_logic_vector(9 downto 0) := (others => '0');
+signal h2s_byte_enable                                                          : std_logic_vector(7 downto 0) := (others => '0');
+
 
 begin
 
@@ -97,6 +120,33 @@ soc0 : component soc_system
         memory_mem_ras_n    => HPS_DDR3_RAS_N,
         memory_mem_reset_n  => HPS_DDR3_RESET_N,
         memory_oct_rzqin    => HPS_DDR3_RZQ,
-        memory_mem_we_n     => HPS_DDR3_WE_N
+        memory_mem_we_n     => HPS_DDR3_WE_N,
+
+        -- linking to avalon mm custom slave
+        hps_bridge_waitrequest      => h2s_wait_req,
+        hps_bridge_readdata         => h2s_read_data,
+        hps_bridge_readdatavalid    => h2s_read_dv,
+        hps_bridge_writedata        => h2s_write_data,
+        hps_bridge_address          => h2s_address,
+        hps_bridge_write            => h2s_write_cmd,
+        hps_bridge_read             => h2s_read_cmd,
+        hps_bridge_byteenable       => h2s_byte_enable,
+        hps_bridge_debugaccess      => h2s_debug_access
     );
+	 
+slave0	: component avmm_slave
+			port map (
+			  WAIT_REQ        => h2s_wait_req,
+			  READ_DATA       => h2s_read_data,
+			  READ_DATA_VALID => h2s_read_dv,
+
+			  CLK			  => FPGA_CLK1_50,
+			  WRITE_DATA      => h2s_write_data,
+			  ADDRESS         => h2s_address,
+			  WRITE_CMD       => h2s_write_cmd,
+			  READ_CMD        => h2s_read_cmd,
+			  BYTE_ENABLE     => h2s_byte_enable,
+			  DEBUG_ACCESS    => h2s_debug_access
+            );
+	
 end architecture rtl;

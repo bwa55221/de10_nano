@@ -478,6 +478,7 @@ set_instance_assignment -name ENABLE_BENEFICIAL_SKEW_OPTIMIZATION_FOR_NON_GLOBAL
 set_instance_assignment -name PLL_COMPENSATION_MODE DIRECT -to u0|hps_0|hps_io|border|hps_sdram_inst|pll0|fbout -tag __hps_sdram_p0
 set_global_assignment -name VHDL_INPUT_VERSION VHDL_1993
 set_global_assignment -name VHDL_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name VHDL_FILE avmm_slave.vhd
 set_global_assignment -name QIP_FILE soc_system/synthesis/soc_system.qip
 set_global_assignment -name VHDL_FILE de10_nano_standalone.vhd
 set_global_assignment -name SDC_FILE de10_nano_standalone.sdc
