@@ -27,5 +27,8 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | sudo fdisk ${device}
   q # quite
 EOF
 
+### the over write with 0's is not needed here, but in the script used to create the image
+#sudo dd if=/dev/zero of=$device bs=64k oflag=sync status=progress
+
 ### write image to disk ###
 sudo dd if=sdcard.img of=$device bs=64K status=progress

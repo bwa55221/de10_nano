@@ -16,7 +16,7 @@ sudo mkdir sdcard
 cd sdcard
 
 # Create an image file of 1GB in size.
-sudo dd if=/dev/zero of=sdcard.img bs=1G count=6
+sudo dd if=/dev/zero of=sdcard.img bs=1G count=1
 
 # make image visible as a disk drive
 IMAGE_FILE=$(sudo losetup --show -f sdcard.img)
@@ -60,8 +60,11 @@ sudo mkfs -t vfat ${IMAGE_FILE}p1
 sudo mkfs.ext4 ${IMAGE_FILE}p2
 
 # Parition 3 is Bootloader
+# clear out old bootloader
+echo "clearing out old bootloader"
 sudo dd if=/dev/zero of=${IMAGE_FILE}p3 bs=64k oflag=sync status=progress
-sudo dd if=../u-boot/u-boot-with-spl.sfp of=${IMAGE_FILE}p3 bs=64k seek=0 oflag=sync
+echo "writing new bootloader"
+sudo dd if=../u-boot-socfpga/u-boot-with-spl.sfp of=${IMAGE_FILE}p3 bs=64k seek=0 oflag=sync
 
 #### Kernel and Device Tree Partition ####
 sudo mkdir -p fat
