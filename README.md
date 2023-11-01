@@ -140,10 +140,20 @@ sudo tar -cjpf $DEWD/rootfs.tar.bz2 .
 ```
 
 ### Copy FPGA .sof file to Work Directory
-
+Copy desired FPGA image to the work directory.
 
 ### Create SD Card Image
+Update the SD card image generation script with the filename of the FPGA load. The SD card image generation script is located in the top level of this repo:
+```
+~/de10_nano/create_sdcard_image.sh
+```
 
+Insert an SD Card into the build maching and run the script for writing the SD card image:
+```
+./write_sdcard.sh
+```
+
+Enjoy!
 
 ## Disclaimer
 Initial setup code based off of tutorial, here: https://github.com/zangman/de10-nano
