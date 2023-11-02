@@ -84,7 +84,7 @@ sudo cp ../custom_fpga_load.rbf fat/soc_system.rbf
 echo "LABEL Linux Default" | sudo tee -a extlinux.conf
 echo "    KERNEL ../zImage" | sudo tee -a extlinux.conf
 echo "    FDT ../custom.dtb" | sudo tee -a extlinux.conf
-echo "    APPEND root=/dev/mmcblk0p2 rw rootwait earlyprintk console=ttyS0,115200n8" | sudo tee -a extlinux.conf
+echo "    APPEND root=/dev/mmcblk0p2 rw rootwait earlyprintk console=ttyS0,115200n8 mem=512M" | sudo tee -a extlinux.conf
 
 # Copy it into the extlinux folder.
 sudo mkdir -p fat/extlinux
