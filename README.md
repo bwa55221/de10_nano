@@ -4,7 +4,7 @@ This repo serves to aid in experimentation with FPGA/HPS bridge structures. It p
 
 Shell scripts have been written to automate most of the kernel build process. This includes modifications for u-boot, custom device tree generation, and creation of the SD card image.
 
-## Build Environment Setup
+## Build Environment Setup (linux folder)
 
 ### Build Essentials
 Run the following command to install build dependencies.
@@ -14,13 +14,13 @@ Run the following command to install build dependencies.
 In my case, this repository was cloned to my work directory ```/home/brandon/work```.
 ```git clone git@github.com:bwa55221/de10_nano.git```
 
-### Make a build directory inside the cloned repository
-```mkdir /home/brandon/work/de10_nano/build```
+### Make a build directory inside the cloned repository's linux folder
+```mkdir /home/brandon/work/de10_nano/linux/build```
 
 ### Modify .bashrc
 Users should add the following lines to their ~/.bashrc file. This creates system environment variables that link to the work directory and to the cross-compiler toolchain.
 ```
-export DEWD=/home/brandon/work/de10_nano/build
+export DEWD=/home/brandon/work/de10_nano/linux/build
 ```
 ```
 export CROSS_COMPILE=$DEWD/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
