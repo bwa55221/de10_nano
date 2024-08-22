@@ -82,10 +82,10 @@ module system_top_level (
 );
 
 
-
+localparam F2HSDRAM_DW = 256;
 
 	soc_system u0 (
-		.clk_clk                  (FPGA_CLK1_50), // clk.clk
+
 		.hps_0_h2f_reset_reset_n  (), // hps_0_h2f_reset.reset_n (output)
 		.hps_bridge_waitrequest   (), // hps_bridge.waitrequest
 		.hps_bridge_readdata      (), // .readdata
@@ -114,9 +114,51 @@ module system_top_level (
 		.memory_mem_odt           (HPS_DDR3_ODT), // .mem_odt
 		.memory_mem_dm            (HPS_DDR3_DM), // .mem_dm
 		.memory_oct_rzqin         (HPS_DDR3_RZQ), // .oct_rzqin
-        // .memory_oct_rzqin         (), // .oct_rzqin
 
-		.reset_reset_n            () //  reset.reset_n (input to clock bridge)
+        .clk_clk                  (FPGA_CLK1_50), // clk.clk
+
+        .msgdma_0_st_source_data  (st_data),  // msgdma_0_st_source.data
+		.msgdma_0_st_source_valid (valid), //                   .valid
+		.msgdma_0_st_source_ready (ready)  //                   .ready
 	);
+
+
+wire [F2HSDRAM_DW-1:0] st_data;
+wire valid;
+wire ready;
+
+    test_st_sink #(
+        .DATA_WIDTH (F2HSDRAM_DW)
+    ) test_st_sink (
+        .clk        (FPGA_CLK1_50),
+        .rst        (),
+        .st_data    (st_data),
+        .valid      (valid),
+        .ready      (ready)
+    );
+
+endmodule
+
+
+module test_st_sink #(
+    parameter DATA_WIDTH = 256
+    ) (
+        input wire clk,
+        input wire rst,
+        input wire [DATA_WIDTH-1:0] st_data,
+        input wire valid,
+        output logic ready
+);
+logic [DATA_WIDTH-1:0] data_q; // register the data array
+
+always_ff @ (posedge clk) begin
+    if (rst) begin
+        data_q  <= 0;
+        ready   <= 0;
+    end else begin
+        ready   <= 1;
+        data_q  <= st_data;
+    end
+end
 
 endmodule
