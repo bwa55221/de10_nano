@@ -81,6 +81,12 @@ sudo cp ../linux-socfpga/arch/arm/boot/dts/custom.dtb fat
 sudo cp ../custom_fpga_load.rbf fat/soc_system.rbf
 
 #### Create the extlinux config file for the bootloader. ####
+echo ""
+echo ""
+echo "Creating the extlinux config file for the bootloader"
+echo "HPS SDRAM memory space has been limited to 512Mb"
+echo ""
+echo ""
 echo "LABEL Linux Default" | sudo tee -a extlinux.conf
 echo "    KERNEL ../zImage" | sudo tee -a extlinux.conf
 echo "    FDT ../custom.dtb" | sudo tee -a extlinux.conf
@@ -89,6 +95,14 @@ echo "    APPEND root=/dev/mmcblk0p2 rw rootwait earlyprintk console=ttyS0,11520
 # Copy it into the extlinux folder.
 sudo mkdir -p fat/extlinux
 sudo cp extlinux.conf fat/extlinux
+
+# Copy bootscript into FAT partition
+echo ""
+echo ""
+echo "Copying bootscript u-boot.scr to FAT partition of SD card"
+sudo cp ../../bootscript/u-boot.scr fat/u-boot.scr
+echo ""
+echo ""
 
 # Unmount the partition.
 sudo umount fat

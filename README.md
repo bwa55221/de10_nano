@@ -147,6 +147,7 @@ Update the SD card image generation script with the filename of the FPGA load. T
 ```
 ~/de10_nano/create_sdcard_image.sh
 ```
+* A bootscript can be added to the FAT partition of the SD card image being created. More details on this here: https://github.com/zangman/de10-nano/blob/master/docs/Creating-a-Bootscript.md
 
 Insert an SD Card into the build maching and run the script for writing the SD card image:
 ```
