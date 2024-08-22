@@ -1,1 +1,5 @@
 build/
+ip/soc_system
+ip/.qsys_edit
+ip/soc_system.sopcinfo
+ip/soc_system_ghrd.qsys

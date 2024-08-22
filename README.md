@@ -4,7 +4,22 @@ This repo serves to aid in experimentation with FPGA/HPS bridge structures. It p
 
 Shell scripts have been written to automate most of the kernel build process. This includes modifications for u-boot, custom device tree generation, and creation of the SD card image.
 
-## Build Environment Setup (linux folder)
+## Building the FPGA Design
+### Project Creation
+Use the ```run_project_setup.sh``` script in the ```scripts/``` directory. This will create a new project from scratching using the ```project_setup.tcl```. 
+
+### Synthesizing the Design
+#### Important
+In order to progress through the fitter, first run Analysis & Synthesis. Since the HPS uses a Uni-Phy DDR3 controller, it is required to run Analysis & Synthesis first. This creates a script for setting up the pin assignments for the DDR3 memory. More
+details can be found here: https://www.intel.com/content/www/us/en/docs/programmable/683841/17-0/functional-description-uniphy.html
+
+After running Analysis & Synthesis successfully, the TCL script is conveniently accessible via the Quartus GUI via Tools -> TCL Scripts...
+
+The .tcl script to run will have a name ```<HDL Path>/<submodules>/<slave core name>_p0_pin_assignments.tcl```. For example in my design it is located here: ```/home/brandon/work/de10_nano/ip/soc_system/synthesis/submodules/hps_sdram_p0_pin_assignments.tcl```
+
+Run this script in the build environment and then re-compile the design.
+
+## Building Linux for DE10 Nano (linux folder)
 
 ### Build Essentials
 Run the following command to install build dependencies.

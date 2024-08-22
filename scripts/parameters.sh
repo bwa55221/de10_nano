@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Sourcing params.sh to environment"
-ROOTDIR=/home/brandon/work/temp_proj
+ROOTDIR=/home/brandon/work/
 echo -e "ROOTDIR:\t $ROOTDIR"
 # QUARTUS_DIR="/home/brandon/intelFPGA_pro/24.1/quartus/bin"
 QUARTUS_DIR="/home/brandon/intelFPGA/23.1.1std/quartus/bin"
@@ -19,11 +19,11 @@ echo -e "Quartus Project Name:\t $PROJ_NAME"
 SETUP_SCRIPT=project_setup.tcl
 echo -e "Quartus Project build setup script:\t $SETUP_SCRIPT"
 
-QUARTUS_BUILD_DIR=/home/brandon/quartus_projects/temp_proj/de10_nano
+QUARTUS_BUILD_DIR=/home/brandon/quartus_projects/de10_nano
 echo -e "Quartus Build Directory:\t $QUARTUS_BUILD_DIR"
 
 # source code directory
-SOURCE_CODE_DIR=/home/brandon/work/temp_proj/de10_nano
+SOURCE_CODE_DIR=/home/brandon/work/de10_nano
 echo -e "HDL Source code directory:\t $SOURCE_CODE_DIR"
 
 
