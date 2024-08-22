@@ -11,19 +11,19 @@ Run the following command to install build dependencies.
 ```sudo apt-get install libncurses-dev flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev libmpc-dev libgmp3-dev autoconf bc debootstrap qemu-user-static```
 
 ### Clone this repository
-In my case, this repository was cloned to my home directory.
+In my case, this repository was cloned to my work directory ```/home/brandon/work```.
 ```git clone git@github.com:bwa55221/de10_nano.git```
 
-### Make a work directory
-```mkdir ~/de10_work```
+### Make a build directory inside the cloned repository
+```mkdir /home/brandon/work/de10_nano/build```
 
 ### Modify .bashrc
 Users should add the following lines to their ~/.bashrc file. This creates system environment variables that link to the work directory and to the cross-compiler toolchain.
 ```
-export DEWD=/home/<username>/de10_work
+export DEWD=/home/brandon/work/de10_nano/build
 ```
 ```
-export CROSS_COMPILE=/home/<username>/de10_work/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
+export CROSS_COMPILE=$DEWD/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
 ```
 
 ### Get the ARM GNU Toolchain / Cross compiler
