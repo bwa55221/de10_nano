@@ -29,6 +29,7 @@ set_global_assignment -name SDC_FILE "${SOURCE_CODE_DIR}/misc/DE10_Nano_golden_t
 #set_global_assignment -name VHDL_FILE "${SOURCE_CODE_DIR}/hdl/pcie_sys_top_level.vhd"
 #set_global_assignment -name VERILOG_FILE "${DMA_MODULE_DIR}/pcie_dma_mod.v"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/system_top_level.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/test_st_sink.sv"
 set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/synthesis/soc_system.qip"
 #set_global_assignment -name IP_FILE "${SOURCE_CODE_DIR}/synthesis/ip/rtk_clock_bridge.ip"
