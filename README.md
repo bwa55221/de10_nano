@@ -183,7 +183,9 @@ Insert an SD Card into the build maching and run the script for writing the SD c
 ```
 ## Building a Simple Driver
 1. Recall using gcc to compile any C driver program with 
-``` ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>```
+```
+${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>
+```
 
 ## Resources
 * https://www.rocketboards.org/foswiki/Documentation/EmbeddedLinuxBeginnerSGuide
