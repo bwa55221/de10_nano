@@ -188,6 +188,7 @@ ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>
 ```
 ## mSGDMA Example for SDRAM Bridge
 * https://blog.reds.ch/?p=835
+* Use ```insmod <absolute_path_to_driver.ko>``` once you have cross-compiled and copied the driver over to the DUT (DE10Nano)
 
   
 ## Resources
