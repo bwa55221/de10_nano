@@ -560,9 +560,9 @@
       "echo --- Found u-boot.scr ---; " \
       "fatload mmc 0:1 0x2000000 u-boot.scr; " \
       "source 0x2000000; " \
-    "elif test -e mmc 0:1 soc_system.rbf; then " \
+    "elif test -e mmc 0:1 sdr.rbf; then " \
       "echo --- Programming FPGA ---; " \
-      "fatload mmc 0:1 0x2000000 soc_system.rbf; " \
+      "fatload mmc 0:1 0x2000000 sdr.rbf; " \
       "fpga load 0 0x2000000 0x700000; " \
     "else " \
       "echo u-boot.scr and soc_system.rbf not found in fat.; " \

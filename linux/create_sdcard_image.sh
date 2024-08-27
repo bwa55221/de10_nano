@@ -78,7 +78,7 @@ sudo cp ../linux-socfpga/arch/arm/boot/zImage fat
 sudo cp ../linux-socfpga/arch/arm/boot/dts/custom.dtb fat
 
 # copy the fpga image as "soc_system.rbf"
-sudo cp ../custom_fpga_load.rbf fat/soc_system.rbf
+sudo cp /home/brandon/quartus_projects/de10_nano/sdr.rbf fat/sdr.rbf
 
 #### Create the extlinux config file for the bootloader. ####
 echo ""
@@ -96,13 +96,13 @@ echo "    APPEND root=/dev/mmcblk0p2 rw rootwait earlyprintk console=ttyS0,11520
 sudo mkdir -p fat/extlinux
 sudo cp extlinux.conf fat/extlinux
 
-# Copy bootscript into FAT partition
-echo ""
-echo ""
-echo "Copying bootscript u-boot.scr to FAT partition of SD card"
-sudo cp ../../bootscript/u-boot.scr fat/u-boot.scr
-echo ""
-echo ""
+# # Copy bootscript into FAT partition
+# echo ""
+# echo ""
+# echo "Copying bootscript u-boot.scr to FAT partition of SD card"
+# sudo cp ../../bootscript/u-boot.scr fat/u-boot.scr
+# echo ""
+# echo ""
 
 # Unmount the partition.
 sudo umount fat

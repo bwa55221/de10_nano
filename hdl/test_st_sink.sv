@@ -1,4 +1,4 @@
-`default_nettype none
+//`default_nettype none
 
 module test_st_sink #(
     parameter DATA_WIDTH = 256

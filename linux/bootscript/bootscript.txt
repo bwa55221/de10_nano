@@ -7,12 +7,16 @@
 # set fpga2sdram peripheral to reset by writing 0 to fpgaportrst register (HPS register map)
 mw 0xFFC25080 0x0
 
+
 # load rbf for fpga into memory
+echo --- Loading .rbf from eMMC ---
 fatload mmc 0:1 0x2000000 sdr.rbf
 
 # flash fpga with loaded rbf (this needs to be done while fpga2sdram peripheral is in reset)
 # 0x2000000 is the memory address of where to load fpga image
 # 0x700000 is 7 MB and is the approximate size of .rbf file (from Cyclone V datasheet)
+echo --- Programming FPGA ---
+echo -----Loading image------
 fpga load 0 0x2000000 0x700000
 
 # write 1 to the applycfg bit in the staticcfg register
@@ -22,6 +26,7 @@ mw 0xFFC2505C 0xA
 mw 0xFFC25080 0xFFFF
 
 # continue with boot
+echo --- Continuing with boot process ---
 boot
 
 

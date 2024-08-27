@@ -105,7 +105,7 @@ Create the device tree blob by running the generation script from this repo:
 
 ### Download u-boot
 Found here: https://github.com/u-boot/u-boot or here https://github.com/altera-opensource/u-boot-socfpga. I will use the Altera SOCFPGA u-boot.
-I used the default branch ```socfpga_v2023.04```.
+I used the default branch ```socfpga_v2023.04```. A useful guide for more information can be found here: https://github.com/zangman/de10-nano/blob/master/docs/Building-the-Universal-Bootloader-U-Boot.md.
 
 Change to work directory
 ```
@@ -115,7 +115,10 @@ Clone the u-boot repository with
 ```
 git clone git@github.com:altera-opensource/u-boot-socfpga.git
 ```
-Make u-boot by running the u-boot generation script in this repository. This script updates the u-boot configuration with modifications to ```config_distro_bootcmd.h``` that allow the system to load the FPGA image from the FAT partition at boot time. This script also copies over the modified socfpga_common.h file. The modifications to this file configure a hardcoded MAC address.
+Make u-boot by running the u-boot generation script in this repository. This script updates the u-boot configuration with modifications to ```config_distro_bootcmd.h``` that allow the system to load the FPGA image from the FAT partition at boot time, as well as
+well as load bootscripts (if available), etc. This script also copies over the modified socfpga_common.h file. The modifications to this file configure a hardcoded MAC address.
+
+It is important to note that the load address for the bootfile is 0x2000000, which is defined as the beginning of the RAM address space in the u-boot header file for the Cyclone 5 FPGA. 
 ```
 cd ~/de10_nano/u-boot
 ./generate_uboot.sh
@@ -157,12 +160,16 @@ sudo tar -cjpf $DEWD/rootfs.tar.bz2 .
 ### Copy FPGA .sof file to Work Directory
 Copy desired FPGA image to the work directory.
 
+### Bootscript Generation
+* A bootscript can be added to the FAT partition of the SD card image being created. More details on this here: https://github.com/zangman/de10-nano/blob/master/docs/Creating-a-Bootscript.md
+* The bootscript can be used to modify environment variables that are/were set with the extlinux configuration file, load mmc / fpga, modify hardware registers prior to boot. A bootscript is required if 
+you plan on using the SDRAM bridge since this needs to have hardare registers written while the SDRAM bridge is held in a reset state (after FPGA program but before HPS boot).
+
 ### Create SD Card Image
 Update the SD card image generation script with the filename of the FPGA load. The SD card image generation script is located in the top level of this repo:
 ```
 ~/de10_nano/create_sdcard_image.sh
 ```
-* A bootscript can be added to the FAT partition of the SD card image being created. More details on this here: https://github.com/zangman/de10-nano/blob/master/docs/Creating-a-Bootscript.md
 
 Insert an SD Card into the build maching and run the script for writing the SD card image:
 ```
