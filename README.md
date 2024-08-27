@@ -200,6 +200,9 @@ FPGA / Enabling F2H/H2F/SDRAM/LW Bridges
 Software:
 * https://github.com/zangman/de10-nano/blob/master/docs/Simple-Hardware-Adder_-Writing-the-Software.md
 
+Future Work
+* CMake: https://www.jamieiles.com/posts/quartus-cmake/
+
 
 ## Disclaimer
 Initial setup code based off of tutorial, here: https://github.com/zangman/de10-nano
