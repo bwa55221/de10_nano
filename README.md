@@ -188,9 +188,13 @@ ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>
 ```
 
 ## Resources
+FPGA / Enabling F2H/H2F/SDRAM/LW Bridges
 * https://www.rocketboards.org/foswiki/Documentation/EmbeddedLinuxBeginnerSGuide
 * https://forum.rocketboards.org/t/enable-fpga-to-hps-sdram-interface/2502
 * https://www.intel.com/content/www/us/en/support/programmable/articles/000086918.html
+
+Software:
+* https://github.com/zangman/de10-nano/blob/master/docs/Simple-Hardware-Adder_-Writing-the-Software.md
 
 
 ## Disclaimer
