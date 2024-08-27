@@ -283,13 +283,14 @@ msgdma_probe(struct platform_device *pdev)
         return -EBUSY;
     }
 
-    data->msgdma0_reg = devm_ioremap_nocache(dev, region->start, MSGDMA_MAP_SIZE);
+    // data->msgdma0_reg = devm_ioremap_nocache(dev, region->start, MSGDMA_MAP_SIZE);
+    data->msgdma0_reg = devm_ioremap(dev, region->start, MSGDMA_MAP_SIZE);
     if(data->msgdma0_reg <= 0) {
         dev_err(dev, "could not remap io region");
         return -EFAULT;
     }
-
-    data->msgdma1_reg = devm_ioremap_nocache(dev, region->start + MSGDMA1_OFFSET, MSGDMA_MAP_SIZE);
+    // data->msgdma1_reg = devm_ioremap_nocache(dev, region->start + MSGDMA1_OFFSET, MSGDMA_MAP_SIZE);
+    data->msgdma1_reg = devm_ioremap(dev, region->start + MSGDMA1_OFFSET, MSGDMA_MAP_SIZE);
     if(data->msgdma1_reg <= 0) {
         dev_err(dev, "could not remap io region");
         return -EFAULT;
