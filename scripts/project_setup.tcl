@@ -51,11 +51,25 @@ set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/soc_system/synthesis/soc_system.qip"
 #set_global_assignment -name IP_FILE "${SOURCE_CODE_DIR}/synthesis/ip/rtk_clock_bridge.ip"
 
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/adv7513_driver.vhd"
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/custom_pkg.vhd"
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/i2c_controller.vhd"
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/i2c_master.vhd"
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/reg_lut.vhd"
+set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/rgb_driver.vhd"
+
+
 # add date code vhdl
 source ${COMMON_TCL_LIB}/datetime.tcl
 set_global_assignment -name VHDL_FILE "${COMMON_RTL_LIB}/datetime_driver.vhd"
 set_global_assignment -name VHDL_FILE "${COMMON_RTL_LIB}/datetime.vhd"
 
+
+#============================================================
+# USER ASSIGNED
+#============================================================
+# set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to RST_N
+# set_location_assignment PIN_AH17 -to RST_N
 
 ####################################################################################
 ########################### Signal Tap & Debug #####################################

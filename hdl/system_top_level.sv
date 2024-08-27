@@ -84,6 +84,9 @@ module system_top_level (
 
 localparam F2HSDRAM_DW = 256;
 
+wire rst_n;
+assign rst_n = KEY[0];
+
 wire        h2f_waitrequest;
 wire [63:0] h2f_readdata;
 wire        h2f_readdatavalid;
@@ -127,9 +130,12 @@ wire [7:0]  h2f_byteenable;
 
         .clk_clk                  (FPGA_CLK1_50), // clk.clk
 
-        .msgdma_0_st_source_data  (st_data),  // msgdma_0_st_source.data
-		.msgdma_0_st_source_valid (valid), //                   .valid
-		.msgdma_0_st_source_ready (ready)  //                   .ready
+        .msgdma_0_st_source_data  (st_data),            // msgdma_0_st_source.data
+		.msgdma_0_st_source_valid (valid),              //                   .valid
+		.msgdma_0_st_source_ready (ready),              //                   .ready
+        .pll_0_165m_clk           (pixel_clk_165M),     //         pll_0_165m.clk
+		.pll_0_locked_export      (),                   //       pll_0_locked.export
+		.pll_0_reset_reset        (~rst_n)              //        pll_0_reset.reset
 	);
 
 
@@ -141,7 +147,7 @@ wire ready;
         .DATA_WIDTH (F2HSDRAM_DW)
     ) test_st_sink (
         .clk        (FPGA_CLK1_50),
-        .rst        (),
+        .rst        (~rst_n),
         .st_data    (st_data),
         .valid      (valid),
         .ready      (ready)
@@ -154,7 +160,7 @@ wire ready;
 
     h2f_bridge_slave h2f_bridge_slave(
         .clk            (FPGA_CLK1_50       ),
-        .rst            (),
+        .rst            (~rst_n),
         .waitrequest    (h2f_waitrequest    ),
         .readdata       (h2f_readdata       ),
         .readdatavalid  (h2f_readdatavalid  ),
@@ -164,6 +170,28 @@ wire ready;
         .write          (h2f_write          ),
         .read           (h2f_read           ),
         .byteenable     (h2f_byteenable     )
+    );
 
+
+    wire hdmi_conf_done;
+    wire pixel_clk_165M;
+    assign HDMI_TX_CLK = pixel_clk_165M;
+
+    adv7513_driver adv7513_driver(
+        .SYS_CLK        (pixel_clk_165M),     // hdmi tx clock
+        .SYS_RST_n      (rst_n),     // system reset
+        .ADV_I2C_SCL    (HDMI_I2C_SCL),     
+        .ADV_I2C_SDA    (HDMI_I2C_SDA),
+        .CONFIG_STATUS  (hdmi_conf_done)      // output to inform hdmi tcvr config done
+    );
+
+    rgb_driver rgb_driver (
+        .rgb_clk_i          (pixel_clk_165M),     // 165 MHz pixel clock
+        .rgb_rst_n_i        (rst_n),
+        .transceiver_ready  (hdmi_conf_done),     // connect to config done output from adv7513 driver
+        .rgb_pixel_data_o   (HDMI_TX_D),     // 24 bit array
+        .rgb_vsync_o        (HDMI_TX_VS),
+        .rgb_hsync_o        (HDMI_TX_HS),
+        .rgb_data_enable_o  (HDMI_TX_DE)
     );
 endmodule
