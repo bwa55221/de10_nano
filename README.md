@@ -181,8 +181,15 @@ Insert an SD Card into the build maching and run the script for writing the SD c
 ```
 ./write_sdcard.sh
 ```
+## Building a Simple Driver
+1. Recall using gcc to compile any C driver program with 
+``` ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>```
 
-Enjoy!
+## Resources
+* https://www.rocketboards.org/foswiki/Documentation/EmbeddedLinuxBeginnerSGuide
+* https://forum.rocketboards.org/t/enable-fpga-to-hps-sdram-interface/2502
+* https://www.intel.com/content/www/us/en/support/programmable/articles/000086918.html
+
 
 ## Disclaimer
 Initial setup code based off of tutorial, here: https://github.com/zangman/de10-nano
