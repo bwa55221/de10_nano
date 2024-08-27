@@ -186,7 +186,10 @@ Insert an SD Card into the build maching and run the script for writing the SD c
 ```
 ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>
 ```
+## mSGDMA Example for SDRAM Bridge
+* https://blog.reds.ch/?p=835
 
+  
 ## Resources
 FPGA / Enabling F2H/H2F/SDRAM/LW Bridges
 * https://www.rocketboards.org/foswiki/Documentation/EmbeddedLinuxBeginnerSGuide
