@@ -137,4 +137,9 @@ wire ready;
         .ready      (ready)
     );
 
+    blink blink(
+        .clk        (FPGA_CLK1_50),
+        .led        (LED[0])
+    );
+
 endmodule
