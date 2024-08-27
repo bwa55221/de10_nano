@@ -84,18 +84,28 @@ module system_top_level (
 
 localparam F2HSDRAM_DW = 256;
 
+wire        h2f_waitrequest;
+wire [63:0] h2f_readdata;
+wire        h2f_readdatavalid;
+wire        h2f_burstcount;
+wire [63:0] h2f_writedata;
+wire [9:0]  h2f_address;
+wire        h2f_write;
+wire        h2f_read;
+wire [7:0]  h2f_byteenable;
+
 	soc_system u0 (
 
 		.hps_0_h2f_reset_reset_n  (), // hps_0_h2f_reset.reset_n (output)
-		.hps_bridge_waitrequest   (), // hps_bridge.waitrequest
-		.hps_bridge_readdata      (), // .readdata
-		.hps_bridge_readdatavalid (), // .readdatavalid
-		.hps_bridge_burstcount    (), // .burstcount
-		.hps_bridge_writedata     (), // .writedata
-		.hps_bridge_address       (), // .address
-		.hps_bridge_write         (), // .write
-		.hps_bridge_read          (), // .read
-		.hps_bridge_byteenable    (), // .byteenable
+		.hps_bridge_waitrequest   (h2f_waitrequest), // hps_bridge.waitrequest
+		.hps_bridge_readdata      (h2f_readdata), // .readdata
+		.hps_bridge_readdatavalid (h2f_readdatavalid), // .readdatavalid
+		.hps_bridge_burstcount    (h2f_burstcount), // .bustcount
+		.hps_bridge_writedata     (h2f_writedata), // .writedata
+		.hps_bridge_address       (h2f_address), // .address
+		.hps_bridge_write         (h2f_write), // .write
+		.hps_bridge_read          (h2f_read), // .read
+		.hps_bridge_byteenable    (h2f_byteenable), // .byteenable
 		.hps_bridge_debugaccess   (), // .debugaccess
 
 		.memory_mem_a             (HPS_DDR3_ADDR), // memory.mem_a
@@ -142,4 +152,18 @@ wire ready;
         .led        (LED[0])
     );
 
+    h2f_bridge_slave h2f_bridge_slave(
+        .clk            (FPGA_CLK1_50       ),
+        .rst            (),
+        .waitrequest    (h2f_waitrequest    ),
+        .readdata       (h2f_readdata       ),
+        .readdatavalid  (h2f_readdatavalid  ),
+        .burstcount     (h2f_burstcount     ),
+        .writedata      (h2f_writedata      ),
+        .address        (h2f_address        ),
+        .write          (h2f_write          ),
+        .read           (h2f_read           ),
+        .byteenable     (h2f_byteenable     )
+
+    );
 endmodule

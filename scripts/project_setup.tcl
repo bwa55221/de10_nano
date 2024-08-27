@@ -45,6 +45,8 @@ set_global_assignment -name SDC_FILE "${SOURCE_CODE_DIR}/misc/DE10_Nano_golden_t
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/system_top_level.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/test_st_sink.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/blink.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/h2f_bridge_slave.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/register64.sv"
 set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/soc_system/synthesis/soc_system.qip"
 #set_global_assignment -name IP_FILE "${SOURCE_CODE_DIR}/synthesis/ip/rtk_clock_bridge.ip"
