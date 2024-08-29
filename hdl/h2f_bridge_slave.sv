@@ -13,7 +13,10 @@ module h2f_bridge_slave #(
     input                           burstcount,
     output [H2F_DATAWIDTH-1:0   ]   readdata,
     output                          readdatavalid,
-    output                          waitrequest
+    output                          waitrequest,
+
+    input   wire    [$clog2(TOTREG)-1:0]    fabric_regsel_i,
+    output  logic   [H2F_DATAWIDTH-1:0]     fabric_regdata_o
 );
 
 
@@ -150,5 +153,9 @@ end
             );
         end
     endgenerate
+
+
+// provide register data to FPGA fabric
+    assign fabric_regdata_o = regdata_out[fabric_regsel_i];
 
 endmodule

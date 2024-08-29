@@ -47,8 +47,11 @@ set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/test_st_s
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/blink.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/h2f_bridge_slave.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/register64.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/sdram_reader.sv"
 set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/soc_system/synthesis/soc_system.qip"
+set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.qip"
+set_global_assignment -name VERILOG "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.v"
 #set_global_assignment -name IP_FILE "${SOURCE_CODE_DIR}/synthesis/ip/rtk_clock_bridge.ip"
 
 set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/adv7513_driver.vhd"
@@ -77,6 +80,8 @@ set_global_assignment -name VHDL_FILE "${COMMON_RTL_LIB}/datetime.vhd"
 
 # set_global_assignment -name ENABLE_SIGNALTAP ON
 # set_global_assignment -name USE_SIGNALTAP_FILE "${SOURCE_CODE_DIR}/stp1.stp"
+set_global_assignment -name ENABLE_SIGNALTAP ON
+set_global_assignment -name USE_SIGNALTAP_FILE "${SOURCE_CODE_DIR}/misc/stp1.stp"
 # set_global_assignment -name SIGNALTAP_FILE "${SOURCE_CODE_DIR}/stp1.stp"
 # set_global_assignment -name PRESERVE_FOR_DEBUG_ENABLE ON
 

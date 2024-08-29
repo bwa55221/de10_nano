@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" version="24.7.7">
+  <diagram name="Page-1" id="6FYsHYdBw_HAbv7NEnmw">
+    <mxGraphModel dx="1018" dy="1409" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="X141JSYqgthQDBCXm1ZY-15" value="165 MHz Clock Domain" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;align=left;" vertex="1" parent="1">
+          <mxGeometry x="520" y="465" width="400" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-1" value="HDMI TX Driver" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="660" y="500" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-2" value="" style="shape=flexArrow;endArrow=classic;html=1;rounded=0;width=11.03448275862069;endSize=8.972413793103449;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="740" y="539.6600000000001" as="sourcePoint" />
+            <mxPoint x="820" y="539.6600000000001" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-3" value="Display" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="830" y="525" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="X141JSYqgthQDBCXm1ZY-5" target="X141JSYqgthQDBCXm1ZY-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-5" value="HDMI I2C Configuration Module" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="660" y="630" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-8" value="HPS" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="40" width="570" height="255" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-9" value="F2H SDRAM Bridge" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="225" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-10" value="H2F AXI Bridge" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="225" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" edge="1" parent="1" source="X141JSYqgthQDBCXm1ZY-11" target="X141JSYqgthQDBCXm1ZY-10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="315" />
+              <mxPoint x="300" y="315" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-11" value="Control Slave w/ 64bit registers" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="260" y="345" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="X141JSYqgthQDBCXm1ZY-13" target="X141JSYqgthQDBCXm1ZY-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="X141JSYqgthQDBCXm1ZY-13" value="Single_write.c&lt;br&gt;Single_read.c" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="137.5" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

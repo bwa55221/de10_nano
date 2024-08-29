@@ -79,6 +79,11 @@
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
+ <interface
+   name="f2h_sdram"
+   internal="hps_0.f2h_sdram0_data"
+   type="avalon"
+   dir="end" />
  <interface name="hps_0_f2h_cold_reset_req" internal="hps_0.f2h_cold_reset_req" />
  <interface name="hps_0_f2h_debug_reset_req" internal="hps_0.f2h_debug_reset_req" />
  <interface name="hps_0_f2h_stm_hw_events" internal="hps_0.f2h_stm_hw_events" />
@@ -86,14 +91,9 @@
  <interface name="hps_0_hps_io" internal="hps_0.hps_io" />
  <interface name="hps_bridge" internal="mm_bridge_0.m0" type="avalon" dir="start" />
  <interface name="memory" internal="hps_0.memory" type="conduit" dir="end" />
- <interface
-   name="msgdma_0_st_source"
-   internal="msgdma_0.st_source"
-   type="avalon_streaming"
-   dir="start" />
+ <interface name="msgdma_0_st_source" internal="msgdma_0.st_source" />
  <interface name="pll_0_165m" internal="pll_0.outclk0" type="clock" dir="start" />
  <interface name="pll_0_locked" internal="pll_0.locked" type="conduit" dir="end" />
- <interface name="pll_0_reset" internal="pll_0.reset" type="reset" dir="end" />
  <module name="clk_0" kind="clock_source" version="23.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -210,7 +210,7 @@
   <parameter name="F2SCLK_SDRAMCLK_Enable" value="false" />
   <parameter name="F2SCLK_SDRAMCLK_FREQ" value="0" />
   <parameter name="F2SCLK_WARMRST_Enable" value="false" />
-  <parameter name="F2SDRAM_Type" value="AXI-3" />
+  <parameter name="F2SDRAM_Type" value="Avalon-MM Read-Only" />
   <parameter name="F2SDRAM_Width" value="256" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
   <parameter name="F2S_Width" value="0" />
@@ -648,7 +648,7 @@
   <parameter name="USE_AUTO_ADDRESS_WIDTH" value="0" />
   <parameter name="USE_RESPONSE" value="0" />
  </module>
- <module name="msgdma_0" kind="altera_msgdma" version="23.1" enabled="1">
+ <module name="msgdma_0" kind="altera_msgdma" version="23.1" enabled="0">
   <parameter name="AUTO_DESCRIPTOR_READ_MASTER_ADDRESS_MAP" value="" />
   <parameter
      name="AUTO_DESCRIPTOR_READ_MASTER_ADDRESS_WIDTH"
@@ -921,15 +921,6 @@
   <parameter name="baseAddress" value="0x0020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection
-   kind="avalon"
-   version="23.1"
-   start="msgdma_0.mm_read"
-   end="hps_0.f2h_sdram0_data">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection kind="clock" version="23.1" start="clk_0.clk" end="mm_bridge_0.clk" />
  <connection kind="clock" version="23.1" start="clk_0.clk" end="msgdma_0.clock" />
  <connection
@@ -965,6 +956,7 @@
    version="23.1"
    start="hps_0.h2f_reset"
    end="mm_bridge_0.reset" />
+ <connection kind="reset" version="23.1" start="hps_0.h2f_reset" end="pll_0.reset" />
  <connection
    kind="reset"
    version="23.1"

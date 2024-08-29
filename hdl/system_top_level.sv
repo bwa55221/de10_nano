@@ -1,5 +1,7 @@
 // `default_nettype none
 
+// `define mSGDMA_ENABLE
+
 module system_top_level (
 
         //////////// CLOCK //////////
@@ -97,6 +99,14 @@ wire        h2f_write;
 wire        h2f_read;
 wire [7:0]  h2f_byteenable;
 
+
+wire [26:0]     f2h_sdram_address;
+wire [7:0]      f2h_sdram_burstcount;
+wire            f2h_sdram_waitrequest;
+wire [255:0]    f2h_sdram_readdata;
+wire            f2h_sdram_readdatavalid;
+wire            f2h_sdram_read;
+
 	soc_system u0 (
 
 		.hps_0_h2f_reset_reset_n  (), // hps_0_h2f_reset.reset_n (output)
@@ -130,12 +140,21 @@ wire [7:0]  h2f_byteenable;
 
         .clk_clk                  (FPGA_CLK1_50), // clk.clk
 
+        `ifdef mSGDMA_ENABLE
         .msgdma_0_st_source_data  (st_data),            // msgdma_0_st_source.data
 		.msgdma_0_st_source_valid (valid),              //                   .valid
 		.msgdma_0_st_source_ready (ready),              //                   .ready
+        `endif
         .pll_0_165m_clk           (pixel_clk_165M),     //         pll_0_165m.clk
 		.pll_0_locked_export      (),                   //       pll_0_locked.export
 		.pll_0_reset_reset        (~rst_n)              //        pll_0_reset.reset
+
+        .f2h_sdram_address        (f2h_sdram_address),  //    f2h_sdram.address width=27
+		.f2h_sdram_burstcount     (f2h_sdram_burstcount),  //             .burstcount width=8
+		.f2h_sdram_waitrequest    (f2h_sdram_waitrequest),  //             .waitrequest
+		.f2h_sdram_readdata       (f2h_sdram_readdata),  //             .readdata width=256
+		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid),  //             .readdatavalid
+		.f2h_sdram_read           (f2h_sdram_read)   //             .read
 	);
 
 
@@ -158,18 +177,37 @@ wire ready;
         .led        (LED[0])
     );
 
+
+    wire [63:0] reg64data;
     h2f_bridge_slave h2f_bridge_slave(
-        .clk            (FPGA_CLK1_50       ),
-        .rst            (~rst_n),
-        .waitrequest    (h2f_waitrequest    ),
-        .readdata       (h2f_readdata       ),
-        .readdatavalid  (h2f_readdatavalid  ),
-        .burstcount     (h2f_burstcount     ),
-        .writedata      (h2f_writedata      ),
-        .address        (h2f_address        ),
-        .write          (h2f_write          ),
-        .read           (h2f_read           ),
-        .byteenable     (h2f_byteenable     )
+        .clk                (FPGA_CLK1_50       ),
+        .rst                (~rst_n             ),
+        .waitrequest        (h2f_waitrequest    ),
+        .readdata           (h2f_readdata       ),
+        .readdatavalid      (h2f_readdatavalid  ),
+        .burstcount         (h2f_burstcount     ),
+        .writedata          (h2f_writedata      ),
+        .address            (h2f_address        ),
+        .write              (h2f_write          ),
+        .read               (h2f_read           ),
+        .byteenable         (h2f_byteenable     ),
+        .fabric_regsel_i    (0),
+        .fabric_regdata_o   (reg64data)
+    );
+
+    sdram_reader sdram_reader(
+        .sdram_clk              (FPGA_CLK1_50           ),
+        .pixel_clk              (pixel_clk_165M         ),
+        .rst                    (~rst_n                 ),
+        .frame_ready_i          (reg64data[0]           ),
+        .sdram_address_o        (f2h_sdram_address      ),
+        .sdram_burstcount_o     (f2h_sdram_burstcount   ),
+        .sdram_waitrequest_i    (f2h_sdram_waitrequest  ),
+        .sdram_readdata_i       (f2h_sdram_readdata     ),
+        .sdram_readdatavalid_i  (f2h_sdram_readdatavalid),
+        .sdram_read_o           (f2h_sdram_read         ),
+        .pixel8_req_i           (),
+        .pixel8_o               ()
     );
 
 
