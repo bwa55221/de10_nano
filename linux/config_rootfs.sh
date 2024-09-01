@@ -26,7 +26,9 @@ echo "enabling ethernet interface"
 echo 'auto lo end0' > /etc/network/interfaces
 echo 'iface lo inet loopback' >> /etc/network/interfaces
 echo 'allow-hotplug end0' >> /etc/network/interfaces
-echo 'iface end0 inet dhcp' >> /etc/network/interfaces
+# echo 'iface end0 inet dhcp' >> /etc/network/interfaces
+echo 'iface end0 inet static' >> etc/network/interfaces
+echo '  address 192.168.1.19/24' >> etc/network/interfaces
 
 echo "installing open ssh server"
 apt install openssh-server -y
@@ -39,6 +41,16 @@ apt install net-tools build-essential device-tree-compiler -y
 
 echo "updating device hostname to: de10-nano"
 echo "de10-nano" > /etc/hostname
+
+# echo "Override network timeout to 5 seconds only"
+# touch /etc/systemd/system/networking.service.d/override.conf
+# echo "TimeoutStartSec=5sec" > /etc/systemd/system/networking.service.d/override.conf
+
+# generate ssh key-pair
+ssh-keygen
+echo ""
+echo ""
+echo ""
 
 echo "cleaning up"
 apt clean

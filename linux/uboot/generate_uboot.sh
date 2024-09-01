@@ -12,7 +12,7 @@ cd ${DEWD}/u-boot-socfpga
 make ARCH=arm socfpga_de10_nano_defconfig
 
 # call this to fine tune the configuration
-#make ARCH=arm menuconfig
+# make ARCH=arm menuconfig
 
 # build u-boot
 make ARCH=arm -j 24

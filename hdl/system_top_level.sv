@@ -86,8 +86,15 @@ module system_top_level (
 
 localparam F2HSDRAM_DW = 256;
 
-wire rst_n;
-assign rst_n = KEY[0];
+
+wire pulse_rst_n;
+wire fabric_rst_n;
+wire rst;
+assign fabric_rst_n = KEY[0] && pulse_rst_n;
+
+wire [F2HSDRAM_DW-1:0] st_data;
+wire valid;
+wire ready;
 
 wire        h2f_waitrequest;
 wire [63:0] h2f_readdata;
@@ -100,16 +107,15 @@ wire        h2f_read;
 wire [7:0]  h2f_byteenable;
 
 
-wire [26:0]     f2h_sdram_address;
+wire [28:0]     f2h_sdram_address;
 wire [7:0]      f2h_sdram_burstcount;
 wire            f2h_sdram_waitrequest;
-wire [255:0]    f2h_sdram_readdata;
+wire [63:0]     f2h_sdram_readdata;
 wire            f2h_sdram_readdatavalid;
 wire            f2h_sdram_read;
 
 	soc_system u0 (
 
-		.hps_0_h2f_reset_reset_n  (), // hps_0_h2f_reset.reset_n (output)
 		.hps_bridge_waitrequest   (h2f_waitrequest), // hps_bridge.waitrequest
 		.hps_bridge_readdata      (h2f_readdata), // .readdata
 		.hps_bridge_readdatavalid (h2f_readdatavalid), // .readdatavalid
@@ -139,34 +145,41 @@ wire            f2h_sdram_read;
 		.memory_oct_rzqin         (HPS_DDR3_RZQ), // .oct_rzqin
 
         .clk_clk                  (FPGA_CLK1_50), // clk.clk
+        .hps_0_h2f_reset_reset_n  (), //output from h2f reset manager
 
         `ifdef mSGDMA_ENABLE
         .msgdma_0_st_source_data  (st_data),            // msgdma_0_st_source.data
 		.msgdma_0_st_source_valid (valid),              //                   .valid
 		.msgdma_0_st_source_ready (ready),              //                   .ready
         `endif
-        .pll_0_165m_clk           (pixel_clk_165M),     //         pll_0_165m.clk
-		.pll_0_locked_export      (),                   //       pll_0_locked.export
-		.pll_0_reset_reset        (~rst_n)              //        pll_0_reset.reset
 
-        .f2h_sdram_address        (f2h_sdram_address),  //    f2h_sdram.address width=27
-		.f2h_sdram_burstcount     (f2h_sdram_burstcount),  //             .burstcount width=8
-		.f2h_sdram_waitrequest    (f2h_sdram_waitrequest),  //             .waitrequest
-		.f2h_sdram_readdata       (f2h_sdram_readdata),  //             .readdata width=256
-		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid),  //             .readdatavalid
-		.f2h_sdram_read           (f2h_sdram_read)   //             .read
+        .pll_0_165m_clk           (pixel_clk_165M           ),  //         pll_0_165m.clk
+		.pll_0_locked_export      (                         ),  //       pll_0_locked.export
+
+        .f2h_sdram_address        (f2h_sdram_address        ),  //    f2h_sdram.address width=27
+		.f2h_sdram_burstcount     (f2h_sdram_burstcount     ),  //             .burstcount width=8
+		.f2h_sdram_waitrequest    (f2h_sdram_waitrequest    ),  //             .waitrequest
+		.f2h_sdram_readdata       (f2h_sdram_readdata       ),  //             .readdata width=256
+		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid  ),  //             .readdatavalid
+		.f2h_sdram_read           (f2h_sdram_read           ),  //             .read
+        .f2h_sdram_writedata      (64'b0), //                        .writedata
+		.f2h_sdram_byteenable     (8'b0), //                        .byteenable
+		.f2h_sdram_write          (1'b0), //                        .write
+        .fabric_reset_in_reset    (~fabric_rst_n), // fabric_reset_in.reset
+		.glob_reset_reset         (rst)  //      glob_reset.reset
 	);
 
 
-wire [F2HSDRAM_DW-1:0] st_data;
-wire valid;
-wire ready;
+    por_pulse por_pulse (
+        .CLOCK      (FPGA_CLK1_50),
+        .RESET_N    (pulse_rst_n)
+    );
 
     test_st_sink #(
         .DATA_WIDTH (F2HSDRAM_DW)
     ) test_st_sink (
         .clk        (FPGA_CLK1_50),
-        .rst        (~rst_n),
+        .rst        (rst),
         .st_data    (st_data),
         .valid      (valid),
         .ready      (ready)
@@ -174,6 +187,7 @@ wire ready;
 
     blink blink(
         .clk        (FPGA_CLK1_50),
+        .rst        (rst),
         .led        (LED[0])
     );
 
@@ -181,7 +195,7 @@ wire ready;
     wire [63:0] reg64data;
     h2f_bridge_slave h2f_bridge_slave(
         .clk                (FPGA_CLK1_50       ),
-        .rst                (~rst_n             ),
+        .rst                (rst                ),
         .waitrequest        (h2f_waitrequest    ),
         .readdata           (h2f_readdata       ),
         .readdatavalid      (h2f_readdatavalid  ),
@@ -198,8 +212,8 @@ wire ready;
     sdram_reader sdram_reader(
         .sdram_clk              (FPGA_CLK1_50           ),
         .pixel_clk              (pixel_clk_165M         ),
-        .rst                    (~rst_n                 ),
-        .frame_ready_i          (reg64data[0]           ),
+        .rst                    (rst                    ),
+        .frame_ready_i          (reg64data[0]           ), // bit 0 of register 0 is used to trigger start of read
         .sdram_address_o        (f2h_sdram_address      ),
         .sdram_burstcount_o     (f2h_sdram_burstcount   ),
         .sdram_waitrequest_i    (f2h_sdram_waitrequest  ),
@@ -217,7 +231,7 @@ wire ready;
 
     adv7513_driver adv7513_driver(
         .SYS_CLK        (pixel_clk_165M),     // hdmi tx clock
-        .SYS_RST_n      (rst_n),     // system reset
+        .SYS_RST_n      (~rst           ),     // system reset
         .ADV_I2C_SCL    (HDMI_I2C_SCL),     
         .ADV_I2C_SDA    (HDMI_I2C_SDA),
         .CONFIG_STATUS  (hdmi_conf_done)      // output to inform hdmi tcvr config done
@@ -225,7 +239,7 @@ wire ready;
 
     rgb_driver rgb_driver (
         .rgb_clk_i          (pixel_clk_165M),     // 165 MHz pixel clock
-        .rgb_rst_n_i        (rst_n),
+        .rgb_rst_n_i        (~rst           ),
         .transceiver_ready  (hdmi_conf_done),     // connect to config done output from adv7513 driver
         .rgb_pixel_data_o   (HDMI_TX_D),     // 24 bit array
         .rgb_vsync_o        (HDMI_TX_VS),

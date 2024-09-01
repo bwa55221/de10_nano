@@ -78,7 +78,7 @@ sudo cp ../linux-socfpga/arch/arm/boot/zImage fat
 sudo cp ../linux-socfpga/arch/arm/boot/dts/custom.dtb fat
 
 # copy the fpga image as "soc_system.rbf"
-sudo cp /home/brandon/work/de10_nano/sdr.rbf fat/sdr.rbf
+sudo cp /home/brandon/quartus_projects/de10_nano/sdr.rbf fat/sdr.rbf
 
 #### Create the extlinux config file for the bootloader. ####
 echo ""

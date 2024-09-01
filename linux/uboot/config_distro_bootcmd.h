@@ -561,9 +561,12 @@
       "fatload mmc 0:1 0x2000000 u-boot.scr; " \
       "source 0x2000000; " \
     "elif test -e mmc 0:1 sdr.rbf; then " \
-      "echo --- Programming FPGA ---; " \
+	  "echo --- Programming FPGA ---; " \
       "fatload mmc 0:1 0x2000000 sdr.rbf; " \
       "fpga load 0 0x2000000 0x700000; " \
+	  "echo --- Enabling Bridge with 0xB mask ---; " \
+	  "bridge enable 0xB; " \
+	  "echo --- Continuing the boot process ---; " \
     "else " \
       "echo u-boot.scr and soc_system.rbf not found in fat.; " \
     "fi; " \	

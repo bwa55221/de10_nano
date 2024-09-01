@@ -32,18 +32,25 @@ int fd;
 int sfd;
 size_t filesize;
 
-void write_h2f_bridge(int *hps2fpga, unsigned short addr, unsigned char data)
+void write_h2f_bridge(int *hps2fpga, unsigned short addr, unsigned long data)
 {
+    printf("Writing data to interface...\n");
 	*(hps2fpga + addr) = data; 
 }
 
-void trigger_sdram_reader() {
+int trigger_sdram_reader() {
+
+    // Open /dev/mem
+	if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) 	{
+		printf( "ERROR: could not open \"/dev/mem\"...\n" );
+		// return( 1 );
+	}
 
 	h2f_virtual_base = mmap(NULL, H2F_BRIDGE_SPAN, (PROT_READ | PROT_WRITE ), MAP_SHARED, fd, H2F_BRIDGE_BASE_ADDR);
 	if ( h2f_virtual_base == MAP_FAILED ) {
 		printf( "ERROR: mmap of H2F Bridge failed...\n" );
 		close( fd );
-		return(1);
+        return(1);
 	}
 	close( fd ); 
 
@@ -71,7 +78,7 @@ void copy_pixel2sdram(void){
     // Open /dev/mem
 	if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) 	{
 		printf( "ERROR: could not open \"/dev/mem\"...\n" );
-		return( 1 );
+		// return( 1 );
 	}
 
 	// get the virtual address that maps to the physcial address of the h2f bridge
@@ -79,7 +86,7 @@ void copy_pixel2sdram(void){
 	if ( sdram_virtual_base == MAP_FAILED ) {
 		printf( "ERROR: mmap of FPGA reserved SDRAM failed...\n" );
 		close( fd );
-		return(1);
+		// return(1);
 	}
 
 	// safe to close this after mmap has returned
@@ -98,9 +105,11 @@ void copy_pixel2sdram(void){
 }
 
 int main(void) {
-
-    copy_pixel2sdram;
-    trigger_sdram_reader;
+    printf("Copying pixel file to SDRAM...\n");
+    copy_pixel2sdram();
+    printf("Writing to H2F control register...\n");
+    trigger_sdram_reader();
+    printf("Write done...\n");
 
 	return 0;
 

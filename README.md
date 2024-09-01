@@ -193,6 +193,8 @@ ${CROSS_COMPILE}gcc <test_c_file.c> -o <test_output_filename>
   
 ## Resources
 FPGA / Enabling F2H/H2F/SDRAM/LW Bridges
+Design example utilizing F2HSDRAM bridge
+* https://www.intel.com/content/www/us/en/support/programmable/support-resources/design-examples/horizontal/fpga-to-hps-bridges-design-example.html
 * https://www.rocketboards.org/foswiki/Documentation/EmbeddedLinuxBeginnerSGuide
 * https://forum.rocketboards.org/t/enable-fpga-to-hps-sdram-interface/2502
 * https://www.intel.com/content/www/us/en/support/programmable/articles/000086918.html

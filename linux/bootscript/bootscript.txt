@@ -5,6 +5,7 @@
 ########### BEGIN BOOT SCRIPT #############
 
 # set fpga2sdram peripheral to reset by writing 0 to fpgaportrst register (HPS register map)
+echo --- Resetting fpga2sdram peripheral ---
 mw 0xFFC25080 0x0
 
 
@@ -20,14 +21,29 @@ echo -----Loading image------
 fpga load 0 0x2000000 0x700000
 
 # write 1 to the applycfg bit in the staticcfg register
+echo --- applying fpga2sdram cfg bit ---
 mw 0xFFC2505C 0xA
 
 # re-enable the fpgaportrst register
+echo --- Taking fpga2sdram peripheral out of reset ---
 mw 0xFFC25080 0xFFFF
 
 # continue with boot
 echo --- Continuing with boot process ---
-boot
+#boot
+
+# from the rocketboard embeddedlinux userguide
+# dont use!!!  #run bridge_enable_handoff;  ---------- this is not defined! 
+
+echo -- Setting Env Variables --
+setenv mmcloadpart 1
+setenv fdtimage custom.dtb;
+setenv mmcroot /dev/mmcblk0p2;
+setenv mmcload 'mmc rescan;${mmcloadcmd} mmc 0:${mmcloadpart} ${loadaddr} ${bootimage};${mmcloadcmd} mmc 0:${mmcloadpart} ${fdt_addr} ${fdtimage};';
+setenv mmcboot 'setenv bootargs console=ttyS0,115200 root=${mmcroot} rw rootwait mem=512M; bootz ${loadaddr} - ${fdtaddr}';
+
+run mmcload;
+run mmcboot;
 
 
 ########### END BOOT SCRIPT ###############

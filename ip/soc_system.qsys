@@ -57,6 +57,14 @@
          type = "int";
       }
    }
+   element reset_bridge_0
+   {
+      datum _sortIndex
+      {
+         value = "5";
+         type = "int";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
@@ -84,10 +92,35 @@
    internal="hps_0.f2h_sdram0_data"
    type="avalon"
    dir="end" />
+ <interface
+   name="fabric_reset_in"
+   internal="reset_bridge_0.in_reset"
+   type="reset"
+   dir="end" />
+ <interface
+   name="glob_reset"
+   internal="reset_bridge_0.out_reset_1"
+   type="reset"
+   dir="start" />
+ <interface
+   name="hps_0_f2h_axi_slave"
+   internal="hps_0.f2h_axi_slave"
+   type="axi"
+   dir="end" />
  <interface name="hps_0_f2h_cold_reset_req" internal="hps_0.f2h_cold_reset_req" />
  <interface name="hps_0_f2h_debug_reset_req" internal="hps_0.f2h_debug_reset_req" />
  <interface name="hps_0_f2h_stm_hw_events" internal="hps_0.f2h_stm_hw_events" />
  <interface name="hps_0_f2h_warm_reset_req" internal="hps_0.f2h_warm_reset_req" />
+ <interface
+   name="hps_0_h2f_lw_axi_master"
+   internal="hps_0.h2f_lw_axi_master"
+   type="axi"
+   dir="start" />
+ <interface
+   name="hps_0_h2f_reset"
+   internal="hps_0.h2f_reset"
+   type="reset"
+   dir="start" />
  <interface name="hps_0_hps_io" internal="hps_0.hps_io" />
  <interface name="hps_bridge" internal="mm_bridge_0.m0" type="avalon" dir="start" />
  <interface name="memory" internal="hps_0.memory" type="conduit" dir="end" />
@@ -196,7 +229,7 @@
   <parameter name="ENABLE_USER_ECC" value="false" />
   <parameter name="EXPORT_AFI_HALF_CLK" value="false" />
   <parameter name="EXTRA_SETTINGS" value="" />
-  <parameter name="F2H_AXI_CLOCK_FREQ" value="100" />
+  <parameter name="F2H_AXI_CLOCK_FREQ" value="50000000" />
   <parameter name="F2H_SDRAM0_CLOCK_FREQ" value="50000000" />
   <parameter name="F2H_SDRAM1_CLOCK_FREQ" value="100" />
   <parameter name="F2H_SDRAM2_CLOCK_FREQ" value="100" />
@@ -210,10 +243,10 @@
   <parameter name="F2SCLK_SDRAMCLK_Enable" value="false" />
   <parameter name="F2SCLK_SDRAMCLK_FREQ" value="0" />
   <parameter name="F2SCLK_WARMRST_Enable" value="false" />
-  <parameter name="F2SDRAM_Type" value="Avalon-MM Read-Only" />
-  <parameter name="F2SDRAM_Width" value="256" />
+  <parameter name="F2SDRAM_Type">Avalon-MM Bidirectional</parameter>
+  <parameter name="F2SDRAM_Width" value="64" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
-  <parameter name="F2S_Width" value="0" />
+  <parameter name="F2S_Width" value="2" />
   <parameter name="FIX_READ_LATENCY" value="8" />
   <parameter name="FORCED_NON_LDC_ADDR_CMD_MEM_CK_INVERT" value="false" />
   <parameter name="FORCED_NUM_WRITE_FR_CYCLE_SHIFTS" value="0" />
@@ -660,8 +693,8 @@
   <parameter name="AUTO_DEVICE" value="5CSEBA6U23I7" />
   <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone V" />
   <parameter name="AUTO_DEVICE_SPEEDGRADE" value="7" />
-  <parameter name="AUTO_MM_READ_ADDRESS_MAP"><![CDATA[<address-map><slave name='hps_0_bridges.f2h_sdram0_data' start='0x0' end='0x100000000' /></address-map>]]></parameter>
-  <parameter name="AUTO_MM_READ_ADDRESS_WIDTH" value="AddressWidth = 32" />
+  <parameter name="AUTO_MM_READ_ADDRESS_MAP" value="" />
+  <parameter name="AUTO_MM_READ_ADDRESS_WIDTH" value="AddressWidth = -1" />
   <parameter name="AUTO_MM_WRITE_ADDRESS_MAP" value="" />
   <parameter name="AUTO_MM_WRITE_ADDRESS_WIDTH" value="AddressWidth = -1" />
   <parameter name="BURST_ENABLE" value="0" />
@@ -894,6 +927,17 @@
   <parameter name="gui_switchover_mode">Automatic Switchover</parameter>
   <parameter name="gui_use_locked" value="true" />
  </module>
+ <module
+   name="reset_bridge_0"
+   kind="altera_reset_bridge"
+   version="23.1"
+   enabled="1">
+  <parameter name="ACTIVE_LOW_RESET" value="0" />
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="50000000" />
+  <parameter name="NUM_RESET_OUTPUTS" value="2" />
+  <parameter name="SYNCHRONOUS_EDGES" value="deassert" />
+  <parameter name="USE_RESET_REQUEST" value="0" />
+ </module>
  <connection
    kind="avalon"
    version="23.1"
@@ -922,7 +966,17 @@
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection kind="clock" version="23.1" start="clk_0.clk" end="mm_bridge_0.clk" />
+ <connection
+   kind="clock"
+   version="23.1"
+   start="clk_0.clk"
+   end="reset_bridge_0.clk" />
  <connection kind="clock" version="23.1" start="clk_0.clk" end="msgdma_0.clock" />
+ <connection
+   kind="clock"
+   version="23.1"
+   start="clk_0.clk"
+   end="hps_0.f2h_axi_clock" />
  <connection
    kind="clock"
    version="23.1"
@@ -950,18 +1004,22 @@
    kind="reset"
    version="23.1"
    start="hps_0.h2f_reset"
+   end="msgdma_0.reset_n" />
+ <connection
+   kind="reset"
+   version="23.1"
+   start="reset_bridge_0.out_reset"
    end="clk_0.clk_in_reset" />
  <connection
    kind="reset"
    version="23.1"
-   start="hps_0.h2f_reset"
-   end="mm_bridge_0.reset" />
- <connection kind="reset" version="23.1" start="hps_0.h2f_reset" end="pll_0.reset" />
+   start="reset_bridge_0.out_reset"
+   end="pll_0.reset" />
  <connection
    kind="reset"
    version="23.1"
-   start="hps_0.h2f_reset"
-   end="msgdma_0.reset_n" />
+   start="reset_bridge_0.out_reset"
+   end="mm_bridge_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>

@@ -2,11 +2,18 @@
 
 module blink (
     input wire      clk,
+    input wire      rst,
     output logic    led
 );
     reg [26:0] counter;
-
-    always @(posedge clk) counter <= counter + 1'b1;
+    
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            counter <= 0;
+        end else begin
+            counter <= counter + 1'b1;
+        end
+    end
 
     assign led = counter[26];
 endmodule
