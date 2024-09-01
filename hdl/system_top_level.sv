@@ -1,6 +1,7 @@
 // `default_nettype none
 
 // `define mSGDMA_ENABLE
+// `define TEST_PATTERN
 
 module system_top_level (
 
@@ -209,19 +210,23 @@ wire            f2h_sdram_read;
         .fabric_regdata_o   (reg64data)
     );
 
+    wire pixel_announce;
+    wire pixel_word_request;
+    wire [63:0] pixel_word;
     sdram_reader sdram_reader(
         .sdram_clk              (FPGA_CLK1_50           ),
         .pixel_clk              (pixel_clk_165M         ),
         .rst                    (rst                    ),
         .frame_ready_i          (reg64data[0]           ), // bit 0 of register 0 is used to trigger start of read
+        .first_fill_flag_o      (pixel_announce         ),
         .sdram_address_o        (f2h_sdram_address      ),
         .sdram_burstcount_o     (f2h_sdram_burstcount   ),
         .sdram_waitrequest_i    (f2h_sdram_waitrequest  ),
         .sdram_readdata_i       (f2h_sdram_readdata     ),
         .sdram_readdatavalid_i  (f2h_sdram_readdatavalid),
         .sdram_read_o           (f2h_sdram_read         ),
-        .pixel8_req_i           (),
-        .pixel8_o               ()
+        .pixel8_req_i           (pixel_word_request     ),
+        .pixel8_o               (pixel_word             )
     );
 
 
@@ -237,6 +242,7 @@ wire            f2h_sdram_read;
         .CONFIG_STATUS  (hdmi_conf_done)      // output to inform hdmi tcvr config done
     );
 
+    `ifdef TEST_PATTERN
     rgb_driver rgb_driver (
         .rgb_clk_i          (pixel_clk_165M),     // 165 MHz pixel clock
         .rgb_rst_n_i        (~rst           ),
@@ -246,4 +252,18 @@ wire            f2h_sdram_read;
         .rgb_hsync_o        (HDMI_TX_HS),
         .rgb_data_enable_o  (HDMI_TX_DE)
     );
+    `else
+    hdmi_pixel_driver hdmi_pixel_driver (
+        .clk_i              (pixel_clk_165M     ),
+        .rst_i              (rst                ),
+        .hdmi_tcvr_ready_i  (hdmi_conf_done     ),
+        .pixel_ready_i      (pixel_announce     ),
+        .pixfifo_word_i     (pixel_word         ),
+        .pixfifo_req_o      (pixel_word_request ),
+        .rgb_pixel_o        (HDMI_TX_D          ),
+        .vsync_o            (HDMI_TX_VS         ),
+        .hsync_o            (HDMI_TX_HS         ),
+        .data_enable_o      (HDMI_TX_DE         )
+    );
+    `endif
 endmodule
