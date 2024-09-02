@@ -68,6 +68,7 @@ set_global_assignment -name VHDL_FILE "/home/brandon/work/hdmi_tx/hdl/rgb_driver
 source ${COMMON_TCL_LIB}/datetime.tcl
 set_global_assignment -name VHDL_FILE "${COMMON_RTL_LIB}/datetime_driver.vhd"
 set_global_assignment -name VHDL_FILE "${COMMON_RTL_LIB}/datetime.vhd"
+set_global_assignment -name SYSTEMVERILOG_FILE "${COMMON_RTL_LIB}/core/synchronizer.sv"
 
 
 #============================================================

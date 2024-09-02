@@ -31,8 +31,8 @@ module sdram_reader #(
 
 localparam FRAME_BITS_1080P = 32'h3F48000;
 localparam BUFFER0_BYTE_ADDR = 32'h2000_0000;
-localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/SDRAM_DATA_WIDTH;
-localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1;
+localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/(SDRAM_DATA_WIDTH/8); // 0x400_0000
+localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF
 
 
 // some logic to let pixel driver know fifo is filled
@@ -73,7 +73,7 @@ always_ff @ (posedge sdram_clk) begin
             sdram_read_o        <= 0;
         end
 
-        if (sdram_address_o == COMPLETE_FRAME_COUNT) begin
+        if (sdram_address_o == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
             sdram_address_o     <= BUFFER0_AVALON_ADDR;
         end
 

@@ -32,6 +32,8 @@ struct {
 assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 45, 1120};
 /// end package stuff ///////////////////////////
 
+// combine terms to address pixel/frame ready alignment
+logic internal_rst;
 
 // video_timing_struct current_timing;
 logic [7:0] red, green, blue;
@@ -50,6 +52,11 @@ int v_total;
 int v_sync;
 int v_start;
 int v_end;
+
+// some reset logic
+logic internal_rst_q;
+logic internal_rst_falledge;
+assign internal_rst_falledge = internal_rst_q && ~internal_rst;
 
 // assign current_timing = video_timing_array[0];
 assign h_total     = current_timing.h_total;
@@ -73,12 +80,18 @@ always_comb begin
     vs_end      = (v_count >= v_sync)   ? 1 : 0;
     vr_start    = (v_count == v_start)  ? 1 : 0; // activate row
     vr_end      = (v_count == v_end)    ? 1 : 0; // de-activate row
+
+    internal_rst    = (rst_i || ~hdmi_tcvr_ready_i || ~pixel_ready_i);
+end
+
+always_ff @ (posedge clk_i) begin
+    internal_rst_q  <= internal_rst;
 end
 
 
 // horizontal / column control
 always_ff @ (posedge clk_i) begin
-    if (rst_i) begin
+    if (internal_rst) begin
         h_act   <= 0;
         h_act_q <= 0;
         h_count <= 0;
@@ -114,7 +127,7 @@ end
 
 // vertical / row control
 always_ff @ (posedge clk_i) begin
-    if (rst_i) begin
+    if (internal_rst) begin
         v_act       <= 0;
         v_act_q     <= 0;
         v_count     <= 0;
@@ -147,9 +160,9 @@ end
 
 // manage data enable signal
 always_ff @ (posedge clk_i) begin
-    if (rst_i || ~hdmi_tcvr_ready_i || ~pixel_ready_i) begin
+    if (internal_rst) begin
         data_enable_o   <= 0;
-        {red, green, blue}  <= {0, 0, 0};
+        {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
     end else begin
         if (v_act && h_act) begin
             
@@ -167,7 +180,7 @@ always_ff @ (posedge clk_i) begin
         end else begin
 
             data_enable_o <= 0;
-            {red, green, blue}  <= {0, 0, 0};
+            {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
         end
     end 
 end
@@ -176,26 +189,38 @@ end
 // currently only 2 pixels per word so this is just 1 bit logic
 logic word_pix_count;
 logic [PIXEL_FIFO_DATA_WIDTH-1:0] rgb_pixel_q;
-
+// only align this to be reset pending the pixel ready biy
 always_ff @ (posedge clk_i) begin
-    if (rst_i || ~pixel_ready_i) begin
+    if (~pixel_ready_i) begin
         pixfifo_req_o   <= 0;
         word_pix_count  <= 0;
         rgb_pixel_q     <= 0;
     end else begin
 
-        // increment current pixel count only when data_enable is active
-        if (data_enable_o) begin
-            word_pix_count++;
-        end
-
-        // send a pixel request every other pixel (2 pixels per word rn)
-        if (word_pix_count == 1) begin
+        // load first pixel when coming out of reset
+        if (internal_rst_falledge) begin
             pixfifo_req_o   <= 1;
-        end else begin
-            pixfifo_req_o   <= 0;
             rgb_pixel_q     <= pixfifo_word_i;
         end
+
+        // increment current pixel count only when data_enable is active
+        if (data_enable_o) begin
+
+            word_pix_count++;
+
+            // send a pixel request every other pixel (2 pixels per word rn)
+            if (word_pix_count == 1) begin
+                pixfifo_req_o   <= 1;
+            end else begin
+                pixfifo_req_o   <= 0;
+                rgb_pixel_q     <= pixfifo_word_i;
+            end
+        
+        // don't request any pixels if data is not active
+        end else begin    
+            pixfifo_req_o       <= 0;
+        end
+
     end
 end
 

@@ -2,7 +2,8 @@
 
 FILES="h2f_rw/imload
 image_conversion/raw_image.raw
-check_sdram.sh"
+check_sdram.sh
+stop_sdram.sh"
 
 for f in $FILES
 do

@@ -211,6 +211,7 @@ wire            f2h_sdram_read;
     );
 
     wire pixel_announce;
+    wire pixel_announce_syncd;
     wire pixel_word_request;
     wire [63:0] pixel_word;
     sdram_reader sdram_reader(
@@ -232,38 +233,57 @@ wire            f2h_sdram_read;
 
     wire hdmi_conf_done;
     wire pixel_clk_165M;
+    wire video_rst;
     assign HDMI_TX_CLK = pixel_clk_165M;
 
+    // synchronize fabric reset to pixel clock domain
+    synchronizer synchronizer_video_reset(
+    .async_in           (rst),
+    .clk                (pixel_clk_165M),
+    .sync_out           (video_rst),
+    .rise_edge_tick     (),
+    .fall_edge_tick     ()
+    );
+
+    // synchronize pixel ready annoucnement to pixel clock domain (from sdram reader)
+    synchronizer synchronizer_pixel_announce(
+    .async_in           (pixel_announce),
+    .clk                (pixel_clk_165M),
+    .sync_out           (pixel_announce_syncd),
+    .rise_edge_tick     (),
+    .fall_edge_tick     ()
+    );
+
     adv7513_driver adv7513_driver(
-        .SYS_CLK        (pixel_clk_165M),     // hdmi tx clock
-        .SYS_RST_n      (~rst           ),     // system reset
-        .ADV_I2C_SCL    (HDMI_I2C_SCL),     
-        .ADV_I2C_SDA    (HDMI_I2C_SDA),
-        .CONFIG_STATUS  (hdmi_conf_done)      // output to inform hdmi tcvr config done
+        .SYS_CLK        (pixel_clk_165M ),     // hdmi tx clock
+        .SYS_RST_n      (~video_rst     ),     // system reset
+        .ADV_I2C_SCL    (HDMI_I2C_SCL   ),     
+        .ADV_I2C_SDA    (HDMI_I2C_SDA   ),
+        .CONFIG_STATUS  (hdmi_conf_done )      // output to inform hdmi tcvr config done
     );
 
     `ifdef TEST_PATTERN
     rgb_driver rgb_driver (
-        .rgb_clk_i          (pixel_clk_165M),     // 165 MHz pixel clock
-        .rgb_rst_n_i        (~rst           ),
-        .transceiver_ready  (hdmi_conf_done),     // connect to config done output from adv7513 driver
-        .rgb_pixel_data_o   (HDMI_TX_D),     // 24 bit array
-        .rgb_vsync_o        (HDMI_TX_VS),
-        .rgb_hsync_o        (HDMI_TX_HS),
-        .rgb_data_enable_o  (HDMI_TX_DE)
+        .rgb_clk_i          (pixel_clk_165M ),     // 165 MHz pixel clock
+        .rgb_rst_n_i        (~video_rst     ),
+        .transceiver_ready  (hdmi_conf_done ),     // connect to config done output from adv7513 driver
+        .rgb_pixel_data_o   (HDMI_TX_D      ),     // 24 bit array
+        .rgb_vsync_o        (HDMI_TX_VS     ),
+        .rgb_hsync_o        (HDMI_TX_HS     ),
+        .rgb_data_enable_o  (HDMI_TX_DE     )
     );
     `else
     hdmi_pixel_driver hdmi_pixel_driver (
-        .clk_i              (pixel_clk_165M     ),
-        .rst_i              (rst                ),
-        .hdmi_tcvr_ready_i  (hdmi_conf_done     ),
-        .pixel_ready_i      (pixel_announce     ),
-        .pixfifo_word_i     (pixel_word         ),
-        .pixfifo_req_o      (pixel_word_request ),
-        .rgb_pixel_o        (HDMI_TX_D          ),
-        .vsync_o            (HDMI_TX_VS         ),
-        .hsync_o            (HDMI_TX_HS         ),
-        .data_enable_o      (HDMI_TX_DE         )
+        .clk_i              (pixel_clk_165M         ),
+        .rst_i              (video_rst              ),
+        .hdmi_tcvr_ready_i  (hdmi_conf_done         ),
+        .pixel_ready_i      (pixel_announce_syncd   ),
+        .pixfifo_word_i     (pixel_word             ),
+        .pixfifo_req_o      (pixel_word_request     ),
+        .rgb_pixel_o        (HDMI_TX_D              ),
+        .vsync_o            (HDMI_TX_VS             ),
+        .hsync_o            (HDMI_TX_HS             ),
+        .data_enable_o      (HDMI_TX_DE             )
     );
     `endif
 endmodule

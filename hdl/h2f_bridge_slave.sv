@@ -58,8 +58,14 @@ always_comb begin
         for (int i=0; i < $size(byteenable); i++) begin
             if (byteenable[i] == 1) begin
                 regdata_in[register_idx][((i+1)*8)-1-:8] <= writedata[((i+1)*8)-1-:8];
+            // latch removal
+            end else begin
+                regdata_in[register_idx]    <= regdata_in[register_idx];
             end
         end  
+    // latch removal
+    end else begin
+        regdata_in[register_idx]    <= regdata_in[register_idx];
     end
 end
 
