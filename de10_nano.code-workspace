@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../hdmi_tx"
+		},
+		{
+			"path": "../hdl_sandbox/rtl_lib"
+		}
+	],
+	"settings": {}
+}

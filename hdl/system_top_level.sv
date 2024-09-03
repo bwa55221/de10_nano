@@ -1,7 +1,7 @@
 // `default_nettype none
 
 // `define mSGDMA_ENABLE
-`define TEST_PATTERN
+// `define TEST_PATTERN
 
 module system_top_level (
 
@@ -166,7 +166,7 @@ wire            f2h_sdram_read;
         .f2h_sdram_writedata      (64'b0), //                        .writedata
 		.f2h_sdram_byteenable     (8'b0), //                        .byteenable
 		.f2h_sdram_write          (1'b0), //                        .write
-        .fabric_reset_in_reset    (~fabric_rst_n), // fabric_reset_in.reset
+        .fabric_reset_in_reset    (~fabric_rst_n_syncd), // fabric_reset_in.reset
 		.glob_reset_reset         (rst)  //      glob_reset.reset
 	);
 
@@ -190,6 +190,16 @@ wire            f2h_sdram_read;
         .clk        (FPGA_CLK1_50),
         .rst        (rst),
         .led        (LED[0])
+    );
+
+    wire fabric_rst_n_syncd;
+    // synchronize pixel ready annoucnement to pixel clock domain (from sdram reader)
+    synchronizer synchronizer_fabric_rst (
+    .async_in           (fabric_rst_n),
+    .clk                (FPGA_CLK1_50),
+    .sync_out           (fabric_rst_n_syncd),
+    .rise_edge_tick     (),
+    .fall_edge_tick     ()
     );
 
 

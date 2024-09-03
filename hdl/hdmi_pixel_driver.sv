@@ -133,27 +133,28 @@ always_ff @ (posedge clk_i) begin
         v_count     <= 0;
         vsync_o    <= 0;
     end else begin
+        if (h_max) begin
+            v_act_q     <= v_act;
 
-        v_act_q     <= v_act;
+            if (v_max) begin
+                v_count <= 0;
+            end else begin
+                v_count++;
+            end
 
-        if (v_max) begin
-            v_count <= 0;
-        end else begin
-            v_count++;
-        end
+            if (vs_end && ~v_max) begin
+                vsync_o    <= 0;
+            end else begin
+                vsync_o    <= 1;
+            end
 
-        if (vs_end && ~v_max) begin
-            vsync_o    <= 0;
-        end else begin
-            vsync_o    <= 1;
-        end
-
-        if (vr_start) begin
-            v_act   <= 1;
-        end else if (vr_end) begin
-            v_act   <= 0;
-        end else begin
-            v_act   <= v_act;
+            if (vr_start) begin
+                v_act   <= 1;
+            end else if (vr_end) begin
+                v_act   <= 0;
+            end else begin
+                v_act   <= v_act;
+            end
         end
     end 
 end
