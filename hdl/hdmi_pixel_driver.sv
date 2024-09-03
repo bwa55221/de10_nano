@@ -14,6 +14,9 @@ module hdmi_pixel_driver #(
     output wire     data_enable_o
 );
 
+
+localparam PIXEL_WIDTH = 32;
+
 // stuff I can pack into a package later /////////////
 struct {
     int h_total;
@@ -169,15 +172,68 @@ always_ff @ (posedge clk_i) begin
             
             data_enable_o <= 1;
 
-            if (~word_pix_count) begin
-                red     <= rgb_pixel_q[31:24];
-                green   <= rgb_pixel_q[23:16];
-                blue    <= rgb_pixel_q[15:8];
-            end else begin
-                red     <= rgb_pixel_q[63:56];
-                green   <= rgb_pixel_q[55:48];
-                blue    <= rgb_pixel_q[47:40];
+            // if (~word_pix_count) begin
+            //     red     <= rgb_pixel_q[31:24];
+            //     green   <= rgb_pixel_q[23:16];
+            //     blue    <= rgb_pixel_q[15:8];
+            // end else begin
+            //     red     <= rgb_pixel_q[63:56];
+            //     green   <= rgb_pixel_q[55:48];
+            //     blue    <= rgb_pixel_q[47:40];
+            // end
+            
+            // loop through all 8 pixels per fifo word
+            // cannot use variable/dynamic value as array index in verilog
+            // red     <= rgb_pixel_q[(word_pix_count*31)-:8];
+            // green   <= rgb_pixel_q[(word_pix_count*24)-1-:8];
+            // blue    <= rgb_pixel_q[(word_pix_count*16)-1-:8];
+
+            case (word_pix_count)
+            0: begin
+                red     <= rgb_pixel_q[(1*32)-1-:8];
+                green   <= rgb_pixel_q[(1*24)-1-:8];
+                blue    <= rgb_pixel_q[(1*16)-1-:8];
             end
+            1: begin
+                red     <= rgb_pixel_q[(2*32)-1-:8];
+                green   <= rgb_pixel_q[(2*24)-1-:8];
+                blue    <= rgb_pixel_q[(2*16)-1-:8];
+            end
+            2: begin
+                red     <= rgb_pixel_q[(3*32)-1-:8];
+                green   <= rgb_pixel_q[(3*24)-1-:8];
+                blue    <= rgb_pixel_q[(3*16)-1-:8];
+            end
+            3: begin
+                red     <= rgb_pixel_q[(4*32)-1-:8];
+                green   <= rgb_pixel_q[(4*24)-1-:8];
+                blue    <= rgb_pixel_q[(4*16)-1-:8];
+            end
+            4: begin
+                red     <= rgb_pixel_q[(5*32)-1-:8];
+                green   <= rgb_pixel_q[(5*24)-1-:8];
+                blue    <= rgb_pixel_q[(5*16)-1-:8];
+            end
+            5: begin
+                red     <= rgb_pixel_q[(6*32)-1-:8];
+                green   <= rgb_pixel_q[(6*24)-1-:8];
+                blue    <= rgb_pixel_q[(6*16)-1-:8];
+            end
+            6: begin
+                red     <= rgb_pixel_q[(7*32)-1-:8];
+                green   <= rgb_pixel_q[(7*24)-1-:8];
+                blue    <= rgb_pixel_q[(7*16)-1-:8];
+            end
+            7: begin
+                red     <= rgb_pixel_q[(8*32)-1-:8];
+                green   <= rgb_pixel_q[(8*24)-1-:8];
+                blue    <= rgb_pixel_q[(8*16)-1-:8];
+            end
+            endcase 
+
+
+
+            
         end else begin
 
             data_enable_o <= 0;
@@ -188,7 +244,7 @@ end
 
 // this should be large enough to hold num pix per word
 // currently only 2 pixels per word so this is just 1 bit logic
-logic word_pix_count;
+logic [$clog2(PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-1:0] word_pix_count;
 logic [PIXEL_FIFO_DATA_WIDTH-1:0] rgb_pixel_q;
 // only align this to be reset pending the pixel ready biy
 always_ff @ (posedge clk_i) begin
@@ -210,7 +266,7 @@ always_ff @ (posedge clk_i) begin
             word_pix_count++;
 
             // send a pixel request every other pixel (2 pixels per word rn)
-            if (word_pix_count == 1) begin
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-1) begin
                 pixfifo_req_o   <= 1;
             end else begin
                 pixfifo_req_o   <= 0;

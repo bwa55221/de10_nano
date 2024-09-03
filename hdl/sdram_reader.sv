@@ -18,7 +18,7 @@ module sdram_reader #(
     output logic        first_fill_flag_o,
 
 
-    output logic [28:0              ]   sdram_address_o,
+    output logic [26:0              ]   sdram_address_o,
     output logic [7:0               ]   sdram_burstcount_o,
     input wire                          sdram_waitrequest_i,
     input wire [SDRAM_DATA_WIDTH-1:0]   sdram_readdata_i,
@@ -31,8 +31,8 @@ module sdram_reader #(
 
 localparam FRAME_BITS_1080P = 32'h3F48000;
 localparam BUFFER0_BYTE_ADDR = 32'h2000_0000;
-localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/(SDRAM_DATA_WIDTH/8); // 0x400_0000
-localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF
+localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/(SDRAM_DATA_WIDTH/8); // 0x400_0000 (64 bit width)
+localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF (64 bit width)
 
 
 // some logic to let pixel driver know fifo is filled

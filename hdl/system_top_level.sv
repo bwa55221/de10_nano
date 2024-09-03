@@ -86,6 +86,7 @@ module system_top_level (
 
 
 localparam F2HSDRAM_DW = 256;
+localparam F2HSDRAM_ADDRW = 27;
 
 
 wire pulse_rst_n;
@@ -108,12 +109,12 @@ wire        h2f_read;
 wire [7:0]  h2f_byteenable;
 
 
-wire [28:0]     f2h_sdram_address;
-wire [7:0]      f2h_sdram_burstcount;
-wire            f2h_sdram_waitrequest;
-wire [63:0]     f2h_sdram_readdata;
-wire            f2h_sdram_readdatavalid;
-wire            f2h_sdram_read;
+wire [F2HSDRAM_ADDRW-1:0]       f2h_sdram_address;
+wire [7:0]                      f2h_sdram_burstcount;
+wire                            f2h_sdram_waitrequest;
+wire [F2HSDRAM_DW-1:0]          f2h_sdram_readdata;
+wire                            f2h_sdram_readdatavalid;
+wire                            f2h_sdram_read;
 
 	soc_system u0 (
 
@@ -164,7 +165,7 @@ wire            f2h_sdram_read;
 		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid  ),  //             .readdatavalid
 		.f2h_sdram_read           (f2h_sdram_read           ),  //             .read
         .f2h_sdram_writedata      (64'b0), //                        .writedata
-		.f2h_sdram_byteenable     (8'b0), //                        .byteenable
+		.f2h_sdram_byteenable     (32'b0), //                        .byteenable
 		.f2h_sdram_write          (1'b0), //                        .write
         .fabric_reset_in_reset    (~fabric_rst_n_syncd), // fabric_reset_in.reset
 		.glob_reset_reset         (rst)  //      glob_reset.reset
@@ -224,7 +225,10 @@ wire            f2h_sdram_read;
     wire pixel_announce_syncd;
     wire pixel_word_request;
     wire [63:0] pixel_word;
-    sdram_reader sdram_reader(
+    sdram_reader #(
+        .SDRAM_DATA_WIDTH (F2HSDRAM_DW)
+        ) sdram_reader
+        (
         .sdram_clk              (FPGA_CLK1_50           ),
         .pixel_clk              (pixel_clk_165M         ),
         .rst                    (rst                    ),
@@ -283,7 +287,9 @@ wire            f2h_sdram_read;
         .rgb_data_enable_o  (HDMI_TX_DE     )
     );
     `else
-    hdmi_pixel_driver hdmi_pixel_driver (
+    hdmi_pixel_driver #(
+        .PIXEL_FIFO_DATA_WIDTH (F2HSDRAM_DW)
+        ) hdmi_pixel_driver (
         .clk_i              (pixel_clk_165M         ),
         .rst_i              (video_rst              ),
         .hdmi_tcvr_ready_i  (hdmi_conf_done         ),
