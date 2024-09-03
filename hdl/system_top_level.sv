@@ -1,7 +1,7 @@
 // `default_nettype none
 
 // `define mSGDMA_ENABLE
-// `define TEST_PATTERN
+`define TEST_PATTERN
 
 module system_top_level (
 
