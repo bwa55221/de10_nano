@@ -30,9 +30,10 @@ module sdram_reader #(
     );
 
 localparam FRAME_BITS_1080P = 32'h3F48000;
+localparam FRAME_BITS_1075P = 32'h3EFD000;
 localparam BUFFER0_BYTE_ADDR = 32'h2000_0000;
 localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/(SDRAM_DATA_WIDTH/8); // 0x400_0000 (64 bit width)
-localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF (64 bit width)
+localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1075P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF (64 bit width)
 
 
 // some logic to let pixel driver know fifo is filled

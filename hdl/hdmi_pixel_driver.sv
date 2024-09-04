@@ -32,7 +32,9 @@ struct {
 
 // 1920x1080p60 148.5 MHz
 // assign video_timing_array[0] = '{2199, 43, 189, 2109, 1124, 4, 45, 1120};
-assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 45, 1120};
+assign current_timing = '{2199, 88, 191, 2109, 1124, 4, 45, 1120};
+// assign current_timing = '{2200, 44, 192, 2112, 1125, 4, 41, 1121};
+// assign current_timing = '{2750, 44, 191, 2109, 1125, 5, 41, 1121};
 /// end package stuff ///////////////////////////
 
 // combine terms to address pixel/frame ready alignment
@@ -74,15 +76,15 @@ assign v_end       = current_timing.v_end;
 assign rgb_pixel_o = {red, green, blue};
 
 always_comb begin
-    h_max       = (h_count==h_total)    ? 1 : 0;
-    hs_end      = (h_count >= h_sync)   ? 1 : 0;
-    hr_start    = (h_count == h_start)  ? 1 : 0; // activate column
-    hr_end      = (h_count == h_end)    ? 1 : 0; // de-activate column
+    h_max       = (h_count==h_total)    ? 1'b1 : 1'b0;
+    hs_end      = (h_count >= h_sync)   ? 1'b1 : 1'b0;
+    hr_start    = (h_count == h_start)  ? 1'b1 : 1'b0; // activate column
+    hr_end      = (h_count == h_end)    ? 1'b1 : 1'b0; // de-activate column
 
-    v_max       = (v_count == v_total)  ? 1 : 0;
-    vs_end      = (v_count >= v_sync)   ? 1 : 0;
-    vr_start    = (v_count == v_start)  ? 1 : 0; // activate row
-    vr_end      = (v_count == v_end)    ? 1 : 0; // de-activate row
+    v_max       = (v_count == v_total)  ? 1'b1 : 1'b0;
+    vs_end      = (v_count >= v_sync)   ? 1'b1 : 1'b0;
+    vr_start    = (v_count == v_start)  ? 1'b1 : 1'b0; // activate row
+    vr_end      = (v_count == v_end)    ? 1'b1 : 1'b0; // de-activate row
 
     internal_rst    = (rst_i || ~hdmi_tcvr_ready_i || ~pixel_ready_i);
 end
@@ -170,66 +172,10 @@ always_ff @ (posedge clk_i) begin
     end else begin
         if (v_act && h_act) begin
             
-            data_enable_o <= 1;
-
-            // if (~word_pix_count) begin
-            //     red     <= rgb_pixel_q[31:24];
-            //     green   <= rgb_pixel_q[23:16];
-            //     blue    <= rgb_pixel_q[15:8];
-            // end else begin
-            //     red     <= rgb_pixel_q[63:56];
-            //     green   <= rgb_pixel_q[55:48];
-            //     blue    <= rgb_pixel_q[47:40];
-            // end
-            
-            // loop through all 8 pixels per fifo word
-            // cannot use variable/dynamic value as array index in verilog
-            // red     <= rgb_pixel_q[(word_pix_count*31)-:8];
-            // green   <= rgb_pixel_q[(word_pix_count*24)-1-:8];
-            // blue    <= rgb_pixel_q[(word_pix_count*16)-1-:8];
-
-            case (word_pix_count)
-            0: begin
-                red     <= rgb_pixel_q[(1*32)-1-:8];
-                green   <= rgb_pixel_q[(1*24)-1-:8];
-                blue    <= rgb_pixel_q[(1*16)-1-:8];
-            end
-            1: begin
-                red     <= rgb_pixel_q[(2*32)-1-:8];
-                green   <= rgb_pixel_q[(2*24)-1-:8];
-                blue    <= rgb_pixel_q[(2*16)-1-:8];
-            end
-            2: begin
-                red     <= rgb_pixel_q[(3*32)-1-:8];
-                green   <= rgb_pixel_q[(3*24)-1-:8];
-                blue    <= rgb_pixel_q[(3*16)-1-:8];
-            end
-            3: begin
-                red     <= rgb_pixel_q[(4*32)-1-:8];
-                green   <= rgb_pixel_q[(4*24)-1-:8];
-                blue    <= rgb_pixel_q[(4*16)-1-:8];
-            end
-            4: begin
-                red     <= rgb_pixel_q[(5*32)-1-:8];
-                green   <= rgb_pixel_q[(5*24)-1-:8];
-                blue    <= rgb_pixel_q[(5*16)-1-:8];
-            end
-            5: begin
-                red     <= rgb_pixel_q[(6*32)-1-:8];
-                green   <= rgb_pixel_q[(6*24)-1-:8];
-                blue    <= rgb_pixel_q[(6*16)-1-:8];
-            end
-            6: begin
-                red     <= rgb_pixel_q[(7*32)-1-:8];
-                green   <= rgb_pixel_q[(7*24)-1-:8];
-                blue    <= rgb_pixel_q[(7*16)-1-:8];
-            end
-            7: begin
-                red     <= rgb_pixel_q[(8*32)-1-:8];
-                green   <= rgb_pixel_q[(8*24)-1-:8];
-                blue    <= rgb_pixel_q[(8*16)-1-:8];
-            end
-            endcase 
+            data_enable_o   <= 1;
+            red             <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+24);
+            green           <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
+            blue            <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
 
 
 
@@ -265,8 +211,8 @@ always_ff @ (posedge clk_i) begin
 
             word_pix_count++;
 
-            // send a pixel request every other pixel (2 pixels per word rn)
-            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-1) begin
+            // at last pixel request update
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-2) begin // 1 clk delay to new pixel, so do this request 2 clks before last pixel
                 pixfifo_req_o   <= 1;
             end else begin
                 pixfifo_req_o   <= 0;
@@ -278,6 +224,19 @@ always_ff @ (posedge clk_i) begin
             pixfifo_req_o       <= 0;
         end
 
+    end
+end
+
+
+// count the number of read requests per frame
+logic [7:0] read_counter;
+always_ff @ (posedge clk_i) begin
+    if (rst_i || vsync_o) begin
+        read_counter <= 0;
+    end else begin
+        if (pixfifo_req_o) begin
+            read_counter++;
+        end
     end
 end
 

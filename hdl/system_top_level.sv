@@ -224,7 +224,7 @@ wire                            f2h_sdram_read;
     wire pixel_announce;
     wire pixel_announce_syncd;
     wire pixel_word_request;
-    wire [63:0] pixel_word;
+    wire [F2HSDRAM_DW-1:0] pixel_word;
     sdram_reader #(
         .SDRAM_DATA_WIDTH (F2HSDRAM_DW)
         ) sdram_reader
@@ -246,6 +246,7 @@ wire                            f2h_sdram_read;
 
 
     wire hdmi_conf_done;
+    wire hdmi_conf_done_syncd;
     wire pixel_clk_165M;
     wire video_rst;
     assign HDMI_TX_CLK = pixel_clk_165M;
@@ -268,9 +269,18 @@ wire                            f2h_sdram_read;
     .fall_edge_tick     ()
     );
 
+    synchronizer synchronizer_hdmi_conf_done(
+    .async_in           (hdmi_conf_done),
+    .clk                (pixel_clk_165M),
+    .sync_out           (hdmi_conf_done_syncd),
+    .rise_edge_tick     (),
+    .fall_edge_tick     ()
+    );
+
+
     adv7513_driver adv7513_driver(
-        .SYS_CLK        (pixel_clk_165M ),     // hdmi tx clock
-        .SYS_RST_n      (~video_rst     ),     // system reset
+        .SYS_CLK        (FPGA_CLK1_50   ),     // hdmi tx clock
+        .SYS_RST_n      (~rst           ),     // system reset
         .ADV_I2C_SCL    (HDMI_I2C_SCL   ),     
         .ADV_I2C_SDA    (HDMI_I2C_SDA   ),
         .CONFIG_STATUS  (hdmi_conf_done )      // output to inform hdmi tcvr config done
@@ -280,7 +290,7 @@ wire                            f2h_sdram_read;
     rgb_driver rgb_driver (
         .rgb_clk_i          (pixel_clk_165M ),     // 165 MHz pixel clock
         .rgb_rst_n_i        (~video_rst     ),
-        .transceiver_ready  (hdmi_conf_done ),     // connect to config done output from adv7513 driver
+        .transceiver_ready  (hdmi_conf_done_syncd),     // connect to config done output from adv7513 driver
         .rgb_pixel_data_o   (HDMI_TX_D      ),     // 24 bit array
         .rgb_vsync_o        (HDMI_TX_VS     ),
         .rgb_hsync_o        (HDMI_TX_HS     ),
@@ -292,7 +302,7 @@ wire                            f2h_sdram_read;
         ) hdmi_pixel_driver (
         .clk_i              (pixel_clk_165M         ),
         .rst_i              (video_rst              ),
-        .hdmi_tcvr_ready_i  (hdmi_conf_done         ),
+        .hdmi_tcvr_ready_i  (hdmi_conf_done_syncd   ),
         .pixel_ready_i      (pixel_announce_syncd   ),
         .pixfifo_word_i     (pixel_word             ),
         .pixfifo_req_o      (pixel_word_request     ),
