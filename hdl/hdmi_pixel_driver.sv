@@ -1,3 +1,6 @@
+`default_nettype none
+// `define ENABLE_TEST_PIXEL
+`define QUARTUS_ENV
 module hdmi_pixel_driver #(
     parameter PIXEL_FIFO_DATA_WIDTH = 64
 )
@@ -7,11 +10,11 @@ module hdmi_pixel_driver #(
     input wire      hdmi_tcvr_ready_i,
     input wire      pixel_ready_i,
     input wire      [PIXEL_FIFO_DATA_WIDTH-1:0] pixfifo_word_i,
-    output wire     pixfifo_req_o,
+    output logic     pixfifo_req_o,
     output logic    [23:0] rgb_pixel_o,
-    output wire     vsync_o,
-    output wire     hsync_o, 
-    output wire     data_enable_o
+    output logic     vsync_o,
+    output logic     hsync_o, 
+    output logic     data_enable_o
 );
 
 
@@ -31,15 +34,16 @@ struct {
 
 
 // 1920x1080p60 148.5 MHz
-// assign video_timing_array[0] = '{2199, 43, 189, 2109, 1124, 4, 45, 1120};
-assign current_timing = '{2199, 88, 191, 2109, 1124, 4, 45, 1120};
-// assign current_timing = '{2200, 44, 192, 2112, 1125, 4, 41, 1121};
-// assign current_timing = '{2750, 44, 191, 2109, 1125, 5, 41, 1121};
+
+// assign current_timing = '{2199, 88, 191, 2109, 1124, 4, 45, 1120};
+assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 40, 1120};
+
 /// end package stuff ///////////////////////////
 
 // combine terms to address pixel/frame ready alignment
 logic internal_rst;
-
+logic data_enable, data_enable_q;
+assign data_enable_o = data_enable_q;
 // video_timing_struct current_timing;
 logic [7:0] red, green, blue;
 // counters for counting across row/frame
@@ -93,6 +97,7 @@ always_ff @ (posedge clk_i) begin
     internal_rst_q  <= internal_rst;
 end
 
+logic [7:0] test_pixel;
 
 // horizontal / column control
 always_ff @ (posedge clk_i) begin
@@ -101,6 +106,7 @@ always_ff @ (posedge clk_i) begin
         h_act_q <= 0;
         h_count <= 0;
         hsync_o <= 0;
+        test_pixel  <= 0;
     end else begin
 
         h_act_q <= h_act;
@@ -127,6 +133,14 @@ always_ff @ (posedge clk_i) begin
         end else begin
             h_act   <= h_act;
         end
+
+    // test pixel assignment
+        if (h_act_q) begin
+            test_pixel++;
+        end else begin
+            test_pixel <= 0;
+        end
+
     end
 end
 
@@ -167,22 +181,29 @@ end
 // manage data enable signal
 always_ff @ (posedge clk_i) begin
     if (internal_rst) begin
-        data_enable_o   <= 0;
-        {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
+        {data_enable, data_enable_q}    <= {1'b0, 1'b0};
+        {red, green, blue}              <= {8'b0, 8'b0, 8'b0};
     end else begin
+
+        data_enable_q   <= data_enable;
+        
         if (v_act && h_act) begin
             
-            data_enable_o   <= 1;
-            red             <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+24);
-            green           <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
-            blue            <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
+            data_enable <= 1;
 
-
-
+            `ifdef ENABLE_TEST_PIXEL
+                red     <= test_pixel;
+                green   <= 8'b0;
+                blue    <= 8'b0;
+            `else  
+                red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+24);
+                green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
+                blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
+            `endif
             
         end else begin
 
-            data_enable_o <= 0;
+            data_enable <= 0;
             {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
         end
     end 
@@ -227,17 +248,21 @@ always_ff @ (posedge clk_i) begin
     end
 end
 
-
 // count the number of read requests per frame
-logic [7:0] read_counter;
+(* preserve_for_debug *) int read_counter_o;
 always_ff @ (posedge clk_i) begin
     if (rst_i || vsync_o) begin
-        read_counter <= 0;
+        read_counter_o <= 0;
     end else begin
         if (pixfifo_req_o) begin
-            read_counter++;
+            read_counter_o++;
         end
     end
 end
 
 endmodule
+
+// do this to make quartus not break
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif

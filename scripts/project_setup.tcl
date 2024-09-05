@@ -94,9 +94,11 @@ set_global_assignment -name USE_SIGNALTAP_FILE "${SOURCE_CODE_DIR}/misc/stp1.stp
 
 # this is needed so the design elements aren't synthesized out. 
 
-# set_instance_assignment -name VIRTUAL_PIN ON -to ul_start_bit				
+# ignored by quartus prime standard
+# set_instance_assignment -name VIRTUAL_PIN ON -to read_counter_o	
 
-# set_global_assignment -name PRESERVE_FOR_DEBUG_ENABLE ON
+set_global_assignment -name PRESERVE_FOR_DEBUG_ENABLE ON
+set_instance_assignment -name PRESERVE_FOR_DEBUG ON -to read_counter_o
 # set_global_assignment -name REMOVE_DUPLICATE_REGISTERS OFF
 # set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
 

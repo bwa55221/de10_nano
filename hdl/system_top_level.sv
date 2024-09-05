@@ -309,7 +309,8 @@ wire                            f2h_sdram_read;
         .rgb_pixel_o        (HDMI_TX_D              ),
         .vsync_o            (HDMI_TX_VS             ),
         .hsync_o            (HDMI_TX_HS             ),
-        .data_enable_o      (HDMI_TX_DE             )
+        .data_enable_o      (HDMI_TX_DE             ),
+        .read_counter_o     (                       )
     );
     `endif
 endmodule
