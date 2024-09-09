@@ -172,29 +172,39 @@ wire                            f2h_sdram_read;
 	);
 
 
+
+// ********************************************
+// ********************************************
+//             Fabric Clock Domain
+// ********************************************
+// ********************************************
+
+    // generate POR pulse once fabric clock is running
     por_pulse por_pulse (
         .CLOCK      (FPGA_CLK1_50),
         .RESET_N    (pulse_rst_n)
     );
 
-    test_st_sink #(
-        .DATA_WIDTH (F2HSDRAM_DW)
-    ) test_st_sink (
-        .clk        (FPGA_CLK1_50),
-        .rst        (rst),
-        .st_data    (st_data),
-        .valid      (valid),
-        .ready      (ready)
-    );
+    // test_st_sink #(
+    //     .DATA_WIDTH (F2HSDRAM_DW)
+    // ) test_st_sink (
+    //     .clk        (FPGA_CLK1_50),
+    //     .rst        (rst),
+    //     .st_data    (st_data),
+    //     .valid      (valid),
+    //     .ready      (ready)
+    // );
 
+    // fpga logic programmed ? -- status blinker
     blink blink(
         .clk        (FPGA_CLK1_50),
         .rst        (rst),
         .led        (LED[0])
     );
 
+    // resample fabric reset before feeding into QSYS block
+    // this is needed because the button reset is ASYNC
     wire fabric_rst_n_syncd;
-    // synchronize pixel ready annoucnement to pixel clock domain (from sdram reader)
     synchronizer synchronizer_fabric_rst (
     .async_in           (fabric_rst_n),
     .clk                (FPGA_CLK1_50),
@@ -251,11 +261,37 @@ wire                            f2h_sdram_read;
     wire video_rst;
     assign HDMI_TX_CLK = pixel_clk_165M;
 
+    adv7513_driver adv7513_driver(
+        .SYS_CLK        (FPGA_CLK1_50   ),     // hdmi tx clock
+        .SYS_RST_n      (~rst           ),     // system reset
+        .ADV_I2C_SCL    (HDMI_I2C_SCL   ),     
+        .ADV_I2C_SDA    (HDMI_I2C_SDA   ),
+        .CONFIG_STATUS  (hdmi_conf_done )      // output to inform hdmi tcvr config done
+    );
+
+
+
+
+// ********************************************
+// ********************************************
+//             Pixel Clock Domain
+// ********************************************
+// ********************************************
+
     // synchronize fabric reset to pixel clock domain
     synchronizer synchronizer_video_reset(
     .async_in           (rst),
     .clk                (pixel_clk_165M),
     .sync_out           (video_rst),
+    .rise_edge_tick     (),
+    .fall_edge_tick     ()
+    );
+
+    // synchronize HDMI IC Configuration Done to Pixel Clock Domain
+    synchronizer synchronizer_hdmi_conf_done(
+    .async_in           (hdmi_conf_done),
+    .clk                (pixel_clk_165M),
+    .sync_out           (hdmi_conf_done_syncd),
     .rise_edge_tick     (),
     .fall_edge_tick     ()
     );
@@ -269,22 +305,6 @@ wire                            f2h_sdram_read;
     .fall_edge_tick     ()
     );
 
-    synchronizer synchronizer_hdmi_conf_done(
-    .async_in           (hdmi_conf_done),
-    .clk                (pixel_clk_165M),
-    .sync_out           (hdmi_conf_done_syncd),
-    .rise_edge_tick     (),
-    .fall_edge_tick     ()
-    );
-
-
-    adv7513_driver adv7513_driver(
-        .SYS_CLK        (FPGA_CLK1_50   ),     // hdmi tx clock
-        .SYS_RST_n      (~rst           ),     // system reset
-        .ADV_I2C_SCL    (HDMI_I2C_SCL   ),     
-        .ADV_I2C_SDA    (HDMI_I2C_SDA   ),
-        .CONFIG_STATUS  (hdmi_conf_done )      // output to inform hdmi tcvr config done
-    );
 
     `ifdef TEST_PATTERN
     rgb_driver rgb_driver (

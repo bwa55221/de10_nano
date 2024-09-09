@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Mount FAT filesystem"
-mount /dev/mmcblk01p1 fat/
+mount /dev/mmcblk0p1 fat/
 echo "Copying new FPGA image to partition"
 cp sdr.rbf fat/sdr.rbf
 echo "Copy complete; cleaning up..."

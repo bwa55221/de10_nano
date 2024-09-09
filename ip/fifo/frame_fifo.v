@@ -43,29 +43,36 @@ module frame_fifo (
 	rdreq,
 	wrclk,
 	wrreq,
+	aclr,
 	q,
 	rdempty,
 	rdusedw,
-	wrfull);
+	wrfull,
+	wrusedw);
 
 	input	[255:0]  data;
 	input	  rdclk;
 	input	  rdreq;
 	input	  wrclk;
 	input	  wrreq;
+	input     aclr;
 	output	[255:0]  q;
 	output	  rdempty;
 	output	[7:0]  rdusedw;
 	output	  wrfull;
+	output	[8:0] wrusedw;
 
 	wire [255:0] sub_wire0;
 	wire  sub_wire1;
 	wire [7:0] sub_wire2;
-	wire  sub_wire3;
+	wire [7:0] sub_wire3;
+	wire [7:0] sub_wire4;
 	wire [255:0] q = sub_wire0[255:0];
 	wire  rdempty = sub_wire1;
 	wire [7:0] rdusedw = sub_wire2[7:0];
+	wire [8:0] wrusedw = sub_wire4;
 	wire  wrfull = sub_wire3;
+	wire aclr;
 
 	dcfifo	dcfifo_component (
 				.data (data),
@@ -77,11 +84,11 @@ module frame_fifo (
 				.rdempty (sub_wire1),
 				.rdusedw (sub_wire2),
 				.wrfull (sub_wire3),
-				.aclr (),
+				.aclr (aclr),
 				.eccstatus (),
 				.rdfull (),
 				.wrempty (),
-				.wrusedw ());
+				.wrusedw (sub_wire4));
 	defparam
 		dcfifo_component.intended_device_family = "Cyclone V",
 		dcfifo_component.lpm_numwords = 256,

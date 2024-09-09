@@ -14,7 +14,8 @@ module hdmi_pixel_driver #(
     output logic    [23:0] rgb_pixel_o,
     output logic     vsync_o,
     output logic     hsync_o, 
-    output logic     data_enable_o
+    output logic     data_enable_o,
+    output logic [31:0] read_counter_o
 );
 
 
@@ -187,25 +188,34 @@ always_ff @ (posedge clk_i) begin
 
         data_enable_q   <= data_enable;
         
-        if (v_act && h_act) begin
-            
+        if (v_act && h_act) begin            
             data_enable <= 1;
+        end else begin
+            data_enable <= 0;
+        end
 
+        if (data_enable) begin
             `ifdef ENABLE_TEST_PIXEL
                 red     <= test_pixel;
                 green   <= 8'b0;
                 blue    <= 8'b0;
             `else  
-                red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+24);
-                green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
-                blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
-            `endif
-            
-        end else begin
 
-            data_enable <= 0;
+                // use this if pixels are packed in via big-endian (MSB first)
+                // red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+24);
+                // green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
+                // blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
+
+                // pixels are packed in LSB first (little-endian from Intel CPU machine)
+                red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH));
+                green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
+                blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
+
+            `endif
+        end else begin
             {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
         end
+
     end 
 end
 
@@ -223,7 +233,7 @@ always_ff @ (posedge clk_i) begin
 
         // load first pixel when coming out of reset
         if (internal_rst_falledge) begin
-            pixfifo_req_o   <= 1;
+            // pixfifo_req_o   <= 1;        // converted FIFO to look ahead mode, first read not required.
             rgb_pixel_q     <= pixfifo_word_i;
         end
 
@@ -233,7 +243,7 @@ always_ff @ (posedge clk_i) begin
             word_pix_count++;
 
             // at last pixel request update
-            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-2) begin // 1 clk delay to new pixel, so do this request 2 clks before last pixel
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-3) begin // request on pixel 5, return on pixel 6, update on pixel 7, rgb new pixel out on 0 count
                 pixfifo_req_o   <= 1;
             end else begin
                 pixfifo_req_o   <= 0;
@@ -249,7 +259,7 @@ always_ff @ (posedge clk_i) begin
 end
 
 // count the number of read requests per frame
-(* preserve_for_debug *) int read_counter_o;
+// (* preserve_for_debug *) int read_counter_o;
 always_ff @ (posedge clk_i) begin
     if (rst_i || vsync_o) begin
         read_counter_o <= 0;
