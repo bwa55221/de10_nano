@@ -213,7 +213,7 @@ always_ff @ (posedge clk_i) begin
 
             `endif
         end else begin
-            {red, green, blue}  <= {8'b0, 8'b0, 8'b0};
+            {red, green, blue}  <= {8'b0, 8'b0, 8'b 0};
         end
 
     end 
@@ -243,11 +243,14 @@ always_ff @ (posedge clk_i) begin
             word_pix_count++;
 
             // at last pixel request update
-            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-3) begin // request on pixel 5, return on pixel 6, update on pixel 7, rgb new pixel out on 0 count
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 3) begin // request on pixel 5, return on pixel 6, update rgb on 7, new pixel displayed on 0th count
                 pixfifo_req_o   <= 1;
+            // end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 2) begin
             end else begin
                 pixfifo_req_o   <= 0;
                 rgb_pixel_q     <= pixfifo_word_i;
+            // end else begin
+            //     pixfifo_req_o   <= 0;
             end
         
         // don't request any pixels if data is not active
