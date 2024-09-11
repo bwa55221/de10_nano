@@ -52,7 +52,9 @@ set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/hdmi_pixe
 set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/soc_system/synthesis/soc_system.qip"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.qip"
+set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/new_fifo/new_fifo.qip"
 set_global_assignment -name VERILOG_FILE "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.v"
+set_global_assignment -name VERILOG_FILE "${SOURCE_CODE_DIR}/ip/new_fifo/new_fifo.v"
 set_global_assignment -name SYSTEMVERILOG_FILE "/home/brandon/work/hdl_sandbox/rtl_lib/por_pulse.sv"
 #set_global_assignment -name IP_FILE "${SOURCE_CODE_DIR}/synthesis/ip/rtk_clock_bridge.ip"
 
@@ -97,8 +99,8 @@ set_global_assignment -name USE_SIGNALTAP_FILE "${SOURCE_CODE_DIR}/misc/stp1.stp
 # ignored by quartus prime standard
 # set_instance_assignment -name VIRTUAL_PIN ON -to read_counter_o	
 
-set_global_assignment -name PRESERVE_FOR_DEBUG_ENABLE ON
-set_instance_assignment -name PRESERVE_FOR_DEBUG ON -to read_counter_o
+# set_global_assignment -name PRESERVE_FOR_DEBUG_ENABLE ON
+# set_instance_assignment -name PRESERVE_FOR_DEBUG ON -to read_counter_o
 # set_global_assignment -name REMOVE_DUPLICATE_REGISTERS OFF
 # set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
 

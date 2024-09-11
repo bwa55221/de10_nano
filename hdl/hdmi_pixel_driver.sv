@@ -41,7 +41,17 @@ assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 40, 1120};
 
 /// end package stuff ///////////////////////////
 
-// combine terms to address pixel/frame ready alignment
+
+// typedef enum {RESET, REQUEST, PRELOAD, WAIT} state_t;
+localparam RESET = 2'b00;
+localparam REQUEST = 2'b10;
+localparam PRELOAD = 2'b11;
+localparam WAIT = 2'b01;
+logic [2:0] state, next_state;
+
+logic [$clog2(PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-1:0] word_pix_count;
+logic [PIXEL_FIFO_DATA_WIDTH-1:0] rgb_pixel_q;
+
 logic internal_rst;
 logic data_enable, data_enable_q;
 assign data_enable_o = data_enable_q;
@@ -218,39 +228,39 @@ always_ff @ (posedge clk_i) begin
 
     end 
 end
-
-// this should be large enough to hold num pix per word
-// currently only 2 pixels per word so this is just 1 bit logic
-logic [$clog2(PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH)-1:0] word_pix_count;
-logic [PIXEL_FIFO_DATA_WIDTH-1:0] rgb_pixel_q;
+logic delay_clk;
 // only align this to be reset pending the pixel ready biy
 always_ff @ (posedge clk_i) begin
     if (~pixel_ready_i) begin
         pixfifo_req_o   <= 0;
         word_pix_count  <= 0;
         rgb_pixel_q     <= 0;
+        delay_clk       <= 0;
     end else begin
 
-        // load first pixel when coming out of reset
-        if (internal_rst_falledge) begin
-            // pixfifo_req_o   <= 1;        // converted FIFO to look ahead mode, first read not required.
-            rgb_pixel_q     <= pixfifo_word_i;
-        end
+        if (state == REQUEST) begin
+            pixfifo_req_o   <= 1;
 
-        // increment current pixel count only when data_enable is active
-        if (data_enable_o) begin
+        end else if (state == PRELOAD) begin
+            delay_clk       <= 1;
+            pixfifo_req_o   <= 0;
+            rgb_pixel_q     <= pixfifo_word_i;
+        
+
+        end else if (data_enable_o) begin 
 
             word_pix_count++;
 
-            // at last pixel request update
-            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 3) begin // request on pixel 5, return on pixel 6, update rgb on 7, new pixel displayed on 0th count
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 2) begin
                 pixfifo_req_o   <= 1;
-            // end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 2) begin
+
+            // this process is overwriting the word that is currently in rgb_pixel_q
+            end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 1) begin
+                pixfifo_req_o   <= 0;
+                rgb_pixel_q     <= pixfifo_word_i; 
+
             end else begin
                 pixfifo_req_o   <= 0;
-                rgb_pixel_q     <= pixfifo_word_i;
-            // end else begin
-            //     pixfifo_req_o   <= 0;
             end
         
         // don't request any pixels if data is not active
@@ -262,7 +272,6 @@ always_ff @ (posedge clk_i) begin
 end
 
 // count the number of read requests per frame
-// (* preserve_for_debug *) int read_counter_o;
 always_ff @ (posedge clk_i) begin
     if (rst_i || vsync_o) begin
         read_counter_o <= 0;
@@ -271,6 +280,46 @@ always_ff @ (posedge clk_i) begin
             read_counter_o++;
         end
     end
+end
+
+// state machine for managing the preloading of the fifo
+
+// compiler wasn't recongnizing this state machine
+// typedef enum {RESET, REQUEST, PRELOAD, WAIT} state_t;
+// state_t state, next_state;
+
+always_ff @ (posedge clk_i) begin
+
+    if (~pixel_ready_i) begin
+        state   <= RESET;
+    end else begin
+        state   <= next_state;
+    end
+end
+
+always_comb begin
+    case (state) 
+    RESET: begin
+        next_state <= REQUEST;
+    end
+
+    REQUEST: begin
+        next_state  <= PRELOAD;
+    end
+
+    PRELOAD: begin
+        if (delay_clk) begin
+            next_state  <= WAIT;
+        end else begin
+            next_state <= PRELOAD;
+        end
+    end
+
+    WAIT: begin
+        next_state <= WAIT;
+    end
+
+    endcase
 end
 
 endmodule

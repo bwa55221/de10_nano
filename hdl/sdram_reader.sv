@@ -2,6 +2,13 @@
     This module should read data from the SDRAM.
     The readdata should be pushed into a FIFO that will transfer the data across clock boundaries. 
 
+    Possible errors:
+    1. read_address being overwritten when cycling to new frame address, therefore one address never
+    gets read out (would only occur near first frame boundary)
+    2. something wrong with fifo IP, I modified it to show-ahead mode without resynthesizing the QIP block. Attempting to fix this 
+    now with the "new_fifo" IP, which added an extra MSB for wrusedw, and converted back to standard request mode.
+    3. Check to make sure all addresses are correct. Issue now appears to occur within the 2nd horizontal row, should be able to check
+    this manually.
 
 */
 
@@ -30,8 +37,8 @@ module sdram_reader #(
     );
 
 localparam FIFO_DEPTH = 256;
-localparam FIFO_HEADROOM = 20;       // allowable amount of empty words in pixel FIFO before requesting more data from SDRAM
-localparam BREATH_COUNT = 20;       // clock cycles to wait for requested reads to return
+localparam FIFO_HEADROOM = 25;       // allowable amount of empty words in pixel FIFO before requesting more data from SDRAM
+localparam BREATH_COUNT = 30;       // clock cycles to wait for requested reads to return
 localparam READ_ALLOWANCE_TRIGER = 1;
 
 localparam FRAME_BITS_1080P = 32'h3F48000;
@@ -84,48 +91,85 @@ end
     than the FIFO FULL FLAG to determine when to stop reading. 
 
 */
+
+
+
 always_ff @ (posedge sdram_clk) begin
     if (rst) begin
-        // sdram_address_o <= BUFFER0_AVALON_ADDR;
-        read_address    <= BUFFER0_AVALON_ADDR + 1;
-        read_address_q  <= BUFFER0_AVALON_ADDR;
-        sdram_address_o <= 0;
+        sdram_address_o <= BUFFER0_AVALON_ADDR;
+        read_address    <= BUFFER0_AVALON_ADDR;
         sdram_read_o    <= 0;
-
     end else begin
 
-
-        if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin
+        if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin // change this to 1 from 0 
             if (~sdram_waitrequest_i) begin
-
-                sdram_read_o    <= 1;                      
-                sdram_address_o <= read_address_q;
-
-                // push next read address into register for next read transaction (should 
-                // only be updated if entering this loop)
-                read_address_q  <= read_address;
-
-                // increment read_address
-                read_address++;
-
+                sdram_read_o        <= 1;
+                sdram_address_o     <= read_address;
+                read_address        <= read_address + 1;
             end else begin
-                sdram_read_o    <= sdram_read_o;
-                sdram_address_o <= sdram_address_o;
-                read_address    <= read_address;
+                sdram_read_o        <= sdram_read_o;
+                sdram_address_o     <= sdram_address_o;
+                read_address        <= read_address;
             end
-
         end else begin
             sdram_read_o        <= 0;
+            sdram_address_o     <= sdram_address_o;
+            read_address        <= read_address;
         end
 
-        if (read_address_q == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
-            // sdram_address_o     <= BUFFER0_AVALON_ADDR;
-            read_address        <= BUFFER0_AVALON_ADDR + 1;
-            read_address_q      <= BUFFER0_AVALON_ADDR;
+        // cycle back to beginning of frame buffer once we have sent the last read address on the wire
+        if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
+            read_address    <= BUFFER0_AVALON_ADDR;
         end
-
     end
 end
+
+
+
+
+
+// always_ff @ (posedge sdram_clk) begin
+//     if (rst) begin
+//         // sdram_address_o <= BUFFER0_AVALON_ADDR;
+//         read_address    <= BUFFER0_AVALON_ADDR + 1;
+//         read_address_q  <= BUFFER0_AVALON_ADDR;
+//         sdram_address_o <= 0;
+//         sdram_read_o    <= 0;
+
+//     end else begin
+
+
+//         if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin
+//             if (~sdram_waitrequest_i) begin
+
+//                 sdram_read_o    <= 1;                      
+//                 sdram_address_o <= read_address_q;
+
+//                 // push next read address into register for next read transaction (should 
+//                 // only be updated if entering this loop)
+//                 read_address_q  <= read_address;
+
+//                 // increment read_address
+//                 read_address++;
+
+//             end else begin
+//                 sdram_read_o    <= sdram_read_o;
+//                 sdram_address_o <= sdram_address_o;
+//                 read_address    <= read_address;
+//             end
+
+//         end else begin
+//             sdram_read_o        <= 0;
+//         end
+
+//         if (read_address_q == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
+//             // sdram_address_o     <= BUFFER0_AVALON_ADDR;
+//             read_address        <= BUFFER0_AVALON_ADDR + 1;
+//             read_address_q      <= BUFFER0_AVALON_ADDR;
+//         end
+
+//     end
+// end
 
 // manage the read allowance and DDR breathing
 always_ff @ (posedge sdram_clk) begin
@@ -135,44 +179,51 @@ always_ff @ (posedge sdram_clk) begin
 
     end else begin
         
-        if (accepted_read) begin
+        if (accepted_read & (read_allowance >= 1)) begin // add a check to prevent read allowance from rolling over
             read_allowance <= read_allowance - 1;
-        end 
+        end else begin
+            read_allowance <= read_allowance;
+        end
 
         if (read_allowance <= 1) begin
-            if (breath_clk_count == 1) begin
-
-                if (wrusedw < (FIFO_DEPTH - FIFO_HEADROOM) & (wrusedw > 0)) begin
+            if (breath_clk_count == 0) begin
+                if (wrusedw < (FIFO_DEPTH - FIFO_HEADROOM)) begin
                     read_allowance      <= FIFO_HEADROOM;
                     breath_clk_count    <= BREATH_COUNT;
                 end
-
             end else begin
-
                 breath_clk_count <= breath_clk_count -1;
-
             end
         end
 
     end
 end
 
-// add a fifo that stores data and crosses the clock boundary into pixel clock domain
-// 256 bits wide, 256 words deep
+// frame_fifo	frame_fifo (
+// 	.data       (sdram_readdata_i),     
+// 	.rdclk      (pixel_clk),
+// 	.rdreq      (pixel8_req_i),
+// 	.wrclk      (sdram_clk),
+// 	.wrreq      (sdram_readdatavalid_i),
+//     .aclr       (rst),
+// 	.q          (pixel8_o),           
+// 	.rdempty    (),
+// 	.rdusedw    (),
+// 	.wrfull     (fifo_full_flag),
+//     .wrusedw    (wrusedw)
+// 	);
 
-// logic [7:0] wrusedw;
-frame_fifo	frame_fifo (
-	.data       (sdram_readdata_i),     
-	.rdclk      (pixel_clk),
-	.rdreq      (pixel8_req_i),
-	.wrclk      (sdram_clk),
-	.wrreq      (sdram_readdatavalid_i),
-    .aclr       (rst),
-	.q          (pixel8_o),           
+new_fifo	new_fifo_inst (
+	.aclr       (internal_rst           ),
+	.data       (sdram_readdata_i       ),
+	.rdclk      (pixel_clk              ),
+	.rdreq      (pixel8_req_i           ),
+	.wrclk      (sdram_clk              ),
+	.wrreq      (sdram_readdatavalid_i  ),
+	.q          (pixel8_o               ),
 	.rdempty    (),
 	.rdusedw    (),
-	.wrfull     (fifo_full_flag),
-    .wrusedw    (wrusedw)
+	.wrfull     (fifo_full_flag         ),
+	.wrusedw    (wrusedw                )
 	);
-
 endmodule
