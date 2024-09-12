@@ -34,9 +34,9 @@ struct {
 } current_timing;
 
 
-// 1920x1080p60 148.5 MHz
+// 1920x1080p60 148.5 MHz, but being run at 165 MHz pixel clock rate (more FPS)
 
-// assign current_timing = '{2199, 88, 191, 2109, 1124, 4, 45, 1120};
+// these video timings report as 1920x1080 on the HDMI test monitor
 assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 40, 1120};
 
 /// end package stuff ///////////////////////////
@@ -148,7 +148,7 @@ always_ff @ (posedge clk_i) begin
 
     // test pixel assignment
         if (h_act_q) begin
-            test_pixel++;
+            test_pixel <= test_pixel + 1;
         end else begin
             test_pixel <= 0;
         end
@@ -170,7 +170,6 @@ always_ff @ (posedge clk_i) begin
             if (v_max) begin
                 v_count <= 0;
             end else begin
-                // v_count++;
                 v_count <= v_count + 1;
             end
 
@@ -226,9 +225,6 @@ always_ff @ (posedge clk_i) begin
             `endif
         end else begin
             {red, green, blue}  <= {8'b0, 8'b0, 8'b 0};
-            // red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH));
-            // green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
-            // blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
         end
 
     end 
@@ -254,13 +250,11 @@ always_ff @ (posedge clk_i) begin
 
         end else if (data_enable_o) begin 
 
-            // word_pix_count++;
             word_pix_count  <= word_pix_count + 1;
 
             if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 4) begin
                 pixfifo_req_o   <= 1;
 
-            // this process is overwriting the word that is currently in rgb_pixel_q
             end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 3) begin
                 pixfifo_req_o   <= 0;
 
@@ -271,7 +265,6 @@ always_ff @ (posedge clk_i) begin
                 pixfifo_req_o   <= 0;
             end
         
-        // don't request any pixels if data is not active
         end else begin    
             pixfifo_req_o       <= 0;
         end

@@ -1,15 +1,8 @@
 /*
-    This module should read data from the SDRAM.
-    The readdata should be pushed into a FIFO that will transfer the data across clock boundaries. 
-
-    Possible errors:
-    1. read_address being overwritten when cycling to new frame address, therefore one address never
-    gets read out (would only occur near first frame boundary)
-    2. something wrong with fifo IP, I modified it to show-ahead mode without resynthesizing the QIP block. Attempting to fix this 
-    now with the "new_fifo" IP, which added an extra MSB for wrusedw, and converted back to standard request mode.
-    3. Check to make sure all addresses are correct. Issue now appears to occur within the 2nd horizontal row, should be able to check
-    this manually.
-
+    This module uses AVMM transactions to pull data out of SDRAM allocated to the F2HSDRAM bridge (DDR3).
+    The retrieved data is stored into an asynchronous FIFO. Once the FIFO is filled for the first time,
+    (in this example, with pixel data), the module sends an alert, "first_fill_flag_o" to alert exterior modules
+    that data is present and ready for extraction from the FIFO. 
 */
 
 
@@ -55,7 +48,6 @@ logic [$clog2(FIFO_DEPTH):0] wrusedw;
 
 // read addressing registers
 logic [26:0] read_address;
-logic [26:0] read_address_q;
 
 // set a default burst count
 assign sdram_burstcount_o = 8'b1; // just use single burst accesses for now.
@@ -75,21 +67,9 @@ always_ff @(posedge sdram_clk) begin
 end
 
 /*
-    Make sure we read the 0th address, otherwise all pixels are off and shifted from their ideal positions
-    This is done by registering the read_address counter and making the base address value arrive the first
-    time sdram_read_o signal is asserted. 
-
-    1. read_address starts out 1 address above the base address (to account for 1 clk delay)
-    2. sdram_address_o is fed by the registered read address, "read_address_q"
-    3. read_address_q is updated with read_address
-    4. read_address is incremented by 1
-    5. repeat until sdram_output address has performed a read at the last pixel address
-
-
     OTHER NOTE:
     Need to account for reads that are submitted but not yet returned -- use, something other 
     than the FIFO FULL FLAG to determine when to stop reading. 
-
 */
 
 
@@ -108,92 +88,27 @@ always_ff @ (posedge sdram_clk) begin
                 read_address        <= read_address;
 
         end else begin
-            if (frame_ready_i & ~fifo_full_flag & (read_allowance >= 1)) begin // changed to >= 1 from > 0 (9/11)
-                    sdram_read_o        <= 1;
-                    sdram_address_o     <= read_address;
-                    read_address        <= read_address + 1;
+            if (frame_ready_i & ~fifo_full_flag & (read_allowance >= 1)) begin 
+                sdram_read_o        <= 1;
+                sdram_address_o     <= read_address;
+                read_address        <= read_address + 1;
             end else begin
                 sdram_read_o        <= 0;
                 sdram_address_o     <= sdram_address_o;
                 read_address        <= read_address;
             end
 
+    /*
+            NOTE: The following clause should probable be moved outside of the if-else clause containing it.
+            i.e., If read_address hits the boundary as sdram_waitrequest is asserted
+    */
             // cycle back to beginning of frame buffer once we have sent the last read address on the wire
             if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
                 read_address    <= BUFFER0_AVALON_ADDR;
             end
         end
-
-        // // if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin // change this to 1 from 0 
-        // if (frame_ready_i & ~fifo_full_flag & (read_allowance > 0)) begin // change this to 1 from 0 
-        //     if (~sdram_waitrequest_i) begin
-        //         sdram_read_o        <= 1;
-        //         sdram_address_o     <= read_address;
-        //         read_address        <= read_address + 1;
-        //     end else begin
-        //         sdram_read_o        <= sdram_read_o;
-        //         sdram_address_o     <= sdram_address_o;
-        //         read_address        <= read_address;
-        //     end
-        // end else begin
-        //     sdram_read_o        <= 0;
-        //     sdram_address_o     <= sdram_address_o;
-        //     read_address        <= read_address;
-        // end
-
-        // // cycle back to beginning of frame buffer once we have sent the last read address on the wire
-        // if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
-        //     read_address    <= BUFFER0_AVALON_ADDR;
-        // end
     end
 end
-
-
-
-
-
-// always_ff @ (posedge sdram_clk) begin
-//     if (rst) begin
-//         // sdram_address_o <= BUFFER0_AVALON_ADDR;
-//         read_address    <= BUFFER0_AVALON_ADDR + 1;
-//         read_address_q  <= BUFFER0_AVALON_ADDR;
-//         sdram_address_o <= 0;
-//         sdram_read_o    <= 0;
-
-//     end else begin
-
-
-//         if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin
-//             if (~sdram_waitrequest_i) begin
-
-//                 sdram_read_o    <= 1;                      
-//                 sdram_address_o <= read_address_q;
-
-//                 // push next read address into register for next read transaction (should 
-//                 // only be updated if entering this loop)
-//                 read_address_q  <= read_address;
-
-//                 // increment read_address
-//                 read_address++;
-
-//             end else begin
-//                 sdram_read_o    <= sdram_read_o;
-//                 sdram_address_o <= sdram_address_o;
-//                 read_address    <= read_address;
-//             end
-
-//         end else begin
-//             sdram_read_o        <= 0;
-//         end
-
-//         if (read_address_q == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
-//             // sdram_address_o     <= BUFFER0_AVALON_ADDR;
-//             read_address        <= BUFFER0_AVALON_ADDR + 1;
-//             read_address_q      <= BUFFER0_AVALON_ADDR;
-//         end
-
-//     end
-// end
 
 // manage the read allowance and DDR breathing
 always_ff @ (posedge sdram_clk) begin
@@ -209,11 +124,10 @@ always_ff @ (posedge sdram_clk) begin
             read_allowance <= read_allowance;
         end
 
-        // if (read_allowance <= 1) begin
         if (read_allowance == 0) begin
             if (breath_clk_count == 0) begin
                 if (wrusedw < (FIFO_DEPTH - 1 - FIFO_HEADROOM)) begin
-                    read_allowance      <= (FIFO_DEPTH - 1 - wrusedw) - 1; // wrusedw can be running behind, reduce the read allowance to make sure we don't submit too many fill requests
+                    read_allowance      <= (FIFO_DEPTH - 1) - (wrusedw - 1); // wrusedw is 1 clk delayed, read_allowance is 0 indexed, FIFO_DEPTH is 1 indexed (hence the -1)
                     breath_clk_count    <= BREATH_COUNT;
                 end
             end else begin
@@ -224,20 +138,7 @@ always_ff @ (posedge sdram_clk) begin
     end
 end
 
-// frame_fifo	frame_fifo (
-// 	.data       (sdram_readdata_i),     
-// 	.rdclk      (pixel_clk),
-// 	.rdreq      (pixel8_req_i),
-// 	.wrclk      (sdram_clk),
-// 	.wrreq      (sdram_readdatavalid_i),
-//     .aclr       (rst),
-// 	.q          (pixel8_o),           
-// 	.rdempty    (),
-// 	.rdusedw    (),
-// 	.wrfull     (fifo_full_flag),
-//     .wrusedw    (wrusedw)
-// 	);
-
+// regenerated fifo in standard (non-lookahead mode)
 new_fifo	new_fifo_inst (
 	.aclr       (internal_rst           ),
 	.data       (sdram_readdata_i       ),
