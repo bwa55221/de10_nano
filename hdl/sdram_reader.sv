@@ -38,7 +38,7 @@ module sdram_reader #(
 
 localparam FIFO_DEPTH = 256;
 localparam FIFO_HEADROOM = 25;       // allowable amount of empty words in pixel FIFO before requesting more data from SDRAM
-localparam BREATH_COUNT = 30;       // clock cycles to wait for requested reads to return
+localparam BREATH_COUNT = 60;       // clock cycles to wait for requested reads to return
 localparam READ_ALLOWANCE_TRIGER = 1;
 
 localparam FRAME_BITS_1080P = 32'h3F48000;
@@ -101,26 +101,50 @@ always_ff @ (posedge sdram_clk) begin
         sdram_read_o    <= 0;
     end else begin
 
-        if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin // change this to 1 from 0 
-            if (~sdram_waitrequest_i) begin
-                sdram_read_o        <= 1;
-                sdram_address_o     <= read_address;
-                read_address        <= read_address + 1;
-            end else begin
+        // priority check for waitrequest
+        if (sdram_waitrequest_i) begin
                 sdram_read_o        <= sdram_read_o;
                 sdram_address_o     <= sdram_address_o;
                 read_address        <= read_address;
-            end
+
         end else begin
-            sdram_read_o        <= 0;
-            sdram_address_o     <= sdram_address_o;
-            read_address        <= read_address;
+            if (frame_ready_i & ~fifo_full_flag & (read_allowance >= 1)) begin // changed to >= 1 from > 0 (9/11)
+                    sdram_read_o        <= 1;
+                    sdram_address_o     <= read_address;
+                    read_address        <= read_address + 1;
+            end else begin
+                sdram_read_o        <= 0;
+                sdram_address_o     <= sdram_address_o;
+                read_address        <= read_address;
+            end
+
+            // cycle back to beginning of frame buffer once we have sent the last read address on the wire
+            if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
+                read_address    <= BUFFER0_AVALON_ADDR;
+            end
         end
 
-        // cycle back to beginning of frame buffer once we have sent the last read address on the wire
-        if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
-            read_address    <= BUFFER0_AVALON_ADDR;
-        end
+        // // if (frame_ready_i & ~fifo_full_flag & (read_allowance > 1)) begin // change this to 1 from 0 
+        // if (frame_ready_i & ~fifo_full_flag & (read_allowance > 0)) begin // change this to 1 from 0 
+        //     if (~sdram_waitrequest_i) begin
+        //         sdram_read_o        <= 1;
+        //         sdram_address_o     <= read_address;
+        //         read_address        <= read_address + 1;
+        //     end else begin
+        //         sdram_read_o        <= sdram_read_o;
+        //         sdram_address_o     <= sdram_address_o;
+        //         read_address        <= read_address;
+        //     end
+        // end else begin
+        //     sdram_read_o        <= 0;
+        //     sdram_address_o     <= sdram_address_o;
+        //     read_address        <= read_address;
+        // end
+
+        // // cycle back to beginning of frame buffer once we have sent the last read address on the wire
+        // if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
+        //     read_address    <= BUFFER0_AVALON_ADDR;
+        // end
     end
 end
 
@@ -174,7 +198,7 @@ end
 // manage the read allowance and DDR breathing
 always_ff @ (posedge sdram_clk) begin
     if (rst) begin
-        read_allowance      <= 256;
+        read_allowance      <= 255;
         breath_clk_count    <= BREATH_COUNT;
 
     end else begin
@@ -185,10 +209,11 @@ always_ff @ (posedge sdram_clk) begin
             read_allowance <= read_allowance;
         end
 
-        if (read_allowance <= 1) begin
+        // if (read_allowance <= 1) begin
+        if (read_allowance == 0) begin
             if (breath_clk_count == 0) begin
-                if (wrusedw < (FIFO_DEPTH - FIFO_HEADROOM)) begin
-                    read_allowance      <= FIFO_HEADROOM;
+                if (wrusedw < (FIFO_DEPTH - 1 - FIFO_HEADROOM)) begin
+                    read_allowance      <= (FIFO_DEPTH - 1 - wrusedw) - 1; // wrusedw can be running behind, reduce the read allowance to make sure we don't submit too many fill requests
                     breath_clk_count    <= BREATH_COUNT;
                 end
             end else begin

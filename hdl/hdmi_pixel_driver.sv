@@ -126,7 +126,8 @@ always_ff @ (posedge clk_i) begin
         if (h_max) begin 
             h_count <= 0;
         end else begin
-            h_count++;
+            // h_count++;
+            h_count <= h_count + 1;
         end
 
     // send sync if end of row
@@ -169,7 +170,8 @@ always_ff @ (posedge clk_i) begin
             if (v_max) begin
                 v_count <= 0;
             end else begin
-                v_count++;
+                // v_count++;
+                v_count <= v_count + 1;
             end
 
             if (vs_end && ~v_max) begin
@@ -224,6 +226,9 @@ always_ff @ (posedge clk_i) begin
             `endif
         end else begin
             {red, green, blue}  <= {8'b0, 8'b0, 8'b 0};
+            // red     <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH));
+            // green   <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+8);
+            // blue    <= 8'(rgb_pixel_q >> (word_pix_count*PIXEL_WIDTH)+16);
         end
 
     end 
@@ -249,15 +254,18 @@ always_ff @ (posedge clk_i) begin
 
         end else if (data_enable_o) begin 
 
-            word_pix_count++;
+            // word_pix_count++;
+            word_pix_count  <= word_pix_count + 1;
 
-            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 2) begin
+            if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 4) begin
                 pixfifo_req_o   <= 1;
 
             // this process is overwriting the word that is currently in rgb_pixel_q
-            end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 1) begin
+            end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 3) begin
                 pixfifo_req_o   <= 0;
-                rgb_pixel_q     <= pixfifo_word_i; 
+
+            end else if (word_pix_count == (PIXEL_FIFO_DATA_WIDTH/PIXEL_WIDTH) - 2) begin
+                rgb_pixel_q     <= pixfifo_word_i;
 
             end else begin
                 pixfifo_req_o   <= 0;
@@ -277,7 +285,7 @@ always_ff @ (posedge clk_i) begin
         read_counter_o <= 0;
     end else begin
         if (pixfifo_req_o) begin
-            read_counter_o++;
+            read_counter_o <= read_counter_o + 1;
         end
     end
 end
