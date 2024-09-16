@@ -1,4 +1,4 @@
-// `default_nettype none
+`default_nettype none
 
 // `define mSGDMA_ENABLE
 // `define TEST_PATTERN
@@ -334,3 +334,7 @@ wire                            f2h_sdram_read;
     );
     `endif
 endmodule
+
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif

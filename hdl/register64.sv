@@ -1,3 +1,5 @@
+`default_nettype none
+
 module register64 (
     input  wire       i_clk,
     input  wire       i_arstn,
@@ -20,3 +22,7 @@ module register64 (
   assign o_data = reg64;
 
 endmodule
+
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif

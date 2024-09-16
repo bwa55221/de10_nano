@@ -4,29 +4,29 @@
     (in this example, with pixel data), the module sends an alert, "first_fill_flag_o" to alert exterior modules
     that data is present and ready for extraction from the FIFO. 
 */
-
+`default_nettype none
 
 module sdram_reader #(
     parameter SDRAM_DATA_WIDTH = 64
     )(
 
-    input wire          sdram_clk,
-    input wire          pixel_clk,
-    input wire          rst,
+    input  wire                         sdram_clk,
+    input  wire                         pixel_clk,
+    input  wire                         rst,
 
-    input wire          frame_ready_i,        // indicate that there is data in sdram, perhaps this is 2 bits
-    output logic        first_fill_flag_o,
+    input  wire                         frame_ready_i,        // indicate that there is data in sdram, perhaps this is 2 bits
+    output logic                        first_fill_flag_o,
 
 
     output logic [26:0              ]   sdram_address_o,
     output logic [7:0               ]   sdram_burstcount_o,
-    input wire                          sdram_waitrequest_i,
-    input wire [SDRAM_DATA_WIDTH-1:0]   sdram_readdata_i,
-    input wire                          sdram_readdatavalid_i,
-    output logic                         sdram_read_o,
+    input  wire                         sdram_waitrequest_i,
+    input  wire [SDRAM_DATA_WIDTH-1:0]  sdram_readdata_i,
+    input  wire                         sdram_readdatavalid_i,
+    output logic                        sdram_read_o,
 
-    input wire                          pixel8_req_i,
-    output logic [SDRAM_DATA_WIDTH-1:0]  pixel8_o   
+    input  wire                         pixel8_req_i,
+    output logic [SDRAM_DATA_WIDTH-1:0] pixel8_o   
     );
 
 localparam FIFO_DEPTH = 256;
@@ -139,7 +139,7 @@ end
 
 // regenerated fifo in standard (non-lookahead mode)
 new_fifo	new_fifo_inst (
-	.aclr       (internal_rst           ),
+	.aclr       (rst                    ),
 	.data       (sdram_readdata_i       ),
 	.rdclk      (pixel_clk              ),
 	.rdreq      (pixel8_req_i           ),
@@ -152,3 +152,7 @@ new_fifo	new_fifo_inst (
 	.wrusedw    (wrusedw                )
 	);
 endmodule
+
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif

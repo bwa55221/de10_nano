@@ -40,8 +40,7 @@ source /home/brandon/work/de10_nano/misc/DE10_Nano_golden_top.tcl
 
 #set_global_assignment -name GENERATE_COMPRESSED_SOF ON
 set_global_assignment -name SDC_FILE "${SOURCE_CODE_DIR}/misc/DE10_Nano_golden_top.sdc"
-#set_global_assignment -name VHDL_FILE "${SOURCE_CODE_DIR}/hdl/pcie_sys_top_level.vhd"
-#set_global_assignment -name VERILOG_FILE "${DMA_MODULE_DIR}/pcie_dma_mod.v"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/defines.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/system_top_level.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/test_st_sink.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/blink.sv"
@@ -51,9 +50,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/sdram_rea
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/hdmi_pixel_driver.sv"
 set_global_assignment -name QSYS_FILE "${SOURCE_CODE_DIR}/ip/soc_system.qsys"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/soc_system/synthesis/soc_system.qip"
-# set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.qip"
 set_global_assignment -name QIP_FILE "${SOURCE_CODE_DIR}/ip/new_fifo/new_fifo.qip"
-# set_global_assignment -name VERILOG_FILE "${SOURCE_CODE_DIR}/ip/fifo/frame_fifo.v"
 set_global_assignment -name VERILOG_FILE "${SOURCE_CODE_DIR}/ip/new_fifo/new_fifo.v"
 set_global_assignment -name SYSTEMVERILOG_FILE "/home/brandon/work/hdl_sandbox/rtl_lib/por_pulse.sv"
 

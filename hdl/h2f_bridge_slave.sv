@@ -1,3 +1,5 @@
+`default_nettype none
+
 module h2f_bridge_slave #(
     parameter H2F_ADDRWIDTH = 10,
     parameter H2F_DATAWIDTH = 64,
@@ -170,3 +172,7 @@ end
     assign fabric_regdata_o = regdata_out[fabric_regsel_i];
 
 endmodule
+
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif

@@ -1,4 +1,4 @@
-// `default_nettype none
+`default_nettype none
 
 module blink (
     input wire      clk,
@@ -17,3 +17,7 @@ module blink (
 
     assign led = counter[26];
 endmodule
+
+`ifdef QUARTUS_ENV
+    `default_nettype wire
+`endif
