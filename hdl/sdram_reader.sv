@@ -37,7 +37,7 @@ localparam READ_ALLOWANCE_TRIGER = 1;
 localparam FRAME_BITS_1080P = 32'h3F48000;
 localparam BUFFER0_BYTE_ADDR = 32'h2000_0000;
 localparam BUFFER0_AVALON_ADDR = BUFFER0_BYTE_ADDR/(SDRAM_DATA_WIDTH/8); // 0x400_0000 (64 bit width)
-localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH)-1; // 0xFD1FF (64 bit width)
+localparam COMPLETE_FRAME_COUNT = (FRAME_BITS_1080P/SDRAM_DATA_WIDTH); // 0xFD1FF (64 bit width)
 
 // control signals
 logic [$clog2(FIFO_DEPTH):0] read_allowance;
@@ -88,24 +88,23 @@ always_ff @ (posedge sdram_clk) begin
                 read_address        <= read_address;
 
         end else begin
+
             if (frame_ready_i & ~fifo_full_flag & (read_allowance >= 1)) begin 
                 sdram_read_o        <= 1;
                 sdram_address_o     <= read_address;
                 read_address        <= read_address + 1;
+
+                // if read_address is emitted out during last value, recycle, otherwise hold static
+                if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT - 1)) begin
+                    read_address    <= BUFFER0_AVALON_ADDR;
+                end
+
             end else begin
                 sdram_read_o        <= 0;
                 sdram_address_o     <= sdram_address_o;
                 read_address        <= read_address;
             end
-
-    /*
-            NOTE: The following clause should probable be moved outside of the if-else clause containing it.
-            i.e., If read_address hits the boundary as sdram_waitrequest is asserted
-    */
-            // cycle back to beginning of frame buffer once we have sent the last read address on the wire
-            if (read_address == (BUFFER0_AVALON_ADDR + COMPLETE_FRAME_COUNT)) begin
-                read_address    <= BUFFER0_AVALON_ADDR;
-            end
+        
         end
     end
 end
@@ -127,7 +126,7 @@ always_ff @ (posedge sdram_clk) begin
         if (read_allowance == 0) begin
             if (breath_clk_count == 0) begin
                 if (wrusedw < (FIFO_DEPTH - 1 - FIFO_HEADROOM)) begin
-                    read_allowance      <= (FIFO_DEPTH - 1) - (wrusedw - 1); // wrusedw is 1 clk delayed, read_allowance is 0 indexed, FIFO_DEPTH is 1 indexed (hence the -1)
+                    read_allowance      <= FIFO_DEPTH - wrusedw - 2; // wrusedw is 1 clk delayed, read_allowance is 0 indexed, FIFO_DEPTH is 1 indexed (hence the -1)
                     breath_clk_count    <= BREATH_COUNT;
                 end
             end else begin
