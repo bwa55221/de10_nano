@@ -261,12 +261,20 @@ wire                            f2h_sdram_read;
     wire video_rst;
     assign HDMI_TX_CLK = pixel_clk_165M;
 
+    // add module to delay configuration of the ADV7513 until 200 ms after device POR reset occurs
+    wire adv7513_delayed_reset;
+    delayed_reset delayed_reset (
+        .clk_i          (FPGA_CLK1_50),
+        .rst_i          (rst),
+        .delayed_rst_o  (adv7513_delayed_reset)
+    );
+
     adv7513_driver adv7513_driver(
-        .SYS_CLK        (FPGA_CLK1_50   ),     // hdmi tx clock
-        .SYS_RST_n      (~rst           ),     // system reset
-        .ADV_I2C_SCL    (HDMI_I2C_SCL   ),     
-        .ADV_I2C_SDA    (HDMI_I2C_SDA   ),
-        .CONFIG_STATUS  (hdmi_conf_done )      // output to inform hdmi tcvr config done
+        .SYS_CLK        (FPGA_CLK1_50           ),     // hdmi tx clock
+        .SYS_RST_n      (~adv7513_delayed_reset ),     // system reset
+        .ADV_I2C_SCL    (HDMI_I2C_SCL           ),     
+        .ADV_I2C_SDA    (HDMI_I2C_SDA           ),
+        .CONFIG_STATUS  (hdmi_conf_done         )      // output to inform hdmi tcvr config done
     );
 
 

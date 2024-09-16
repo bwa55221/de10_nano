@@ -41,7 +41,7 @@ wire wr_en [TOTREG-1:0];
 logic [H2F_DATAWIDTH-1:0]     rst_data    [TOTREG-1:0];
 
 
-// "inside" is only available in SystemVerilog
+// inside operator is only available in SystemVerilog versions after 2001
 // assign register_idx = address inside {[32'h0:32'h0 + TOTREG*BYTE_COUNT]} ? (address - BASE_OFFSET) >> 2 : 0;
 assign register_idx = (address >= 0 && address <= TOTREG*BYTE_COUNT) ? (address - BASE_OFFSET) >> 2 : 0;
 assign write_rise = write & !write_reg0;  // rising edge detection
@@ -58,10 +58,10 @@ end
 always_ff @ (posedge clk) begin
 
     if (rst) begin
-
         regdata_in[register_idx] <= rst_data[register_idx];
 
     end else begin
+
         if (write) begin
             for (int i=0; i < $size(byteenable); i++) begin
                 if (byteenable[i] == 1) begin

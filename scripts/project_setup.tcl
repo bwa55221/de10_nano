@@ -42,6 +42,7 @@ source /home/brandon/work/de10_nano/misc/DE10_Nano_golden_top.tcl
 set_global_assignment -name SDC_FILE "${SOURCE_CODE_DIR}/misc/DE10_Nano_golden_top.sdc"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/defines.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/system_top_level.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/delayed_reset.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/test_st_sink.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/blink.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "${SOURCE_CODE_DIR}/hdl/h2f_bridge_slave.sv"
