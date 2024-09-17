@@ -273,7 +273,7 @@ wire                            f2h_sdram_read;
         .write              (lwh2f_write        ),
         .read               (lwh2f_read         ),
         .byteenable         (lwh2f_byteenable   ),
-        .fabric_regsel_i    (0),
+        .fabric_regsel_i    (2),
         .fabric_regwrite_i  (),
         .fabric_regdata_i   (),
         .fabric_regdata_o   (reg32data)

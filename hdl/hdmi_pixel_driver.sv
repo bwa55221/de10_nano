@@ -34,10 +34,9 @@ struct {
 } current_timing;
 
 
-// 1920x1080p60 148.5 MHz, but being run at 165 MHz pixel clock rate (more FPS)
-
 // these video timings report as 1920x1080 on the HDMI test monitor
-assign current_timing = '{2199, 43, 189, 2109, 1124, 4, 40, 1120};
+// assign current_timing = '{2200, 44, 192, 2112, 1125, 5, 41, 1120}; // DMT timings for 1920x1080p60 results in 1920x1079
+assign current_timing = '{2200, 44, 192, 2112, 1125, 5, 40, 1120}; // modified DMT timing to get 1920x1080
 
 /// end package stuff ///////////////////////////
 
