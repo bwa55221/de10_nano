@@ -2,7 +2,7 @@
 
 module h2f_bridge_slave #(
     parameter H2F_ADDRWIDTH = 10,
-    parameter H2F_DATAWIDTH = 64,
+    parameter H2F_DATAWIDTH = 32,
     parameter TOTREG       = 32
     )(
     input                           clk,
@@ -18,6 +18,8 @@ module h2f_bridge_slave #(
     output                          waitrequest,
 
     input   wire    [$clog2(TOTREG)-1:0]    fabric_regsel_i,
+    input   wire                            fabric_regwrite_i,      // adding some signals to enable fabric
+    input   wire    [H2F_DATAWIDTH-1:0]     fabric_regdata_i,       // write to registers for HPS readback
     output  logic   [H2F_DATAWIDTH-1:0]     fabric_regdata_o
 );
 
@@ -69,6 +71,10 @@ always_ff @ (posedge clk) begin
                 end
             end  
         
+        // add lower priority clause for fabric to write to register
+        end else if (fabric_regwrite_i) begin
+            regdata_in[fabric_regsel_i] <= fabric_regdata_i;
+        
         // latch removal
         end else begin
             regdata_in[register_idx]    <= regdata_in[register_idx];
@@ -84,6 +90,10 @@ always_comb begin
 
     if (write) begin
         wr_en[register_idx] = 1;
+    
+    // add clause for fabric write
+    end else if (fabric_regwrite_i) begin
+        wr_en[fabric_regsel_i] = 1;
     end
 end
 
@@ -152,18 +162,34 @@ end
         end
     end
 
-// generate registers
+// conditionally generate registers
     genvar i;
     generate
-        for (i=0; i<TOTREG; i++) begin : genregs// replacing "genvar" with "int" for i initiation
-            register64 u_reg64 (
-                .i_clk     (clk),
-                .i_arstn   (~rst),
-                .i_rst_data(rst_data[i]),
-                .i_wr      (wr_en[i]),
-                .i_data    (regdata_in[i]),
-                .o_data    (regdata_out[i])
-            );
+        if (H2F_DATAWIDTH == 64) begin
+                for (i=0; i<TOTREG; i++) begin : genregs// replacing "genvar" with "int" for i initiation
+                    register64 u_reg64 (
+                        .i_clk     (clk),
+                        .i_arstn   (~rst),
+                        .i_rst_data(rst_data[i]),
+                        .i_wr      (wr_en[i]),
+                        .i_data    (regdata_in[i]),
+                        .o_data    (regdata_out[i])
+                    );
+                end
+        end else if (H2F_DATAWIDTH == 32) begin
+                for (i=0; i<TOTREG; i++) begin : genregs// replacing "genvar" with "int" for i initiation
+                    register32 u_reg32 (
+                        .i_clk     (clk),
+                        .i_arstn   (~rst),
+                        .i_rst_data(rst_data[i]),
+                        .i_wr      (wr_en[i]),
+                        .i_data    (regdata_in[i]),
+                        .o_data    (regdata_out[i])
+                    );
+                end
+        end else begin
+            // $error("Illegal condition, H2F_DATAWIDTH invalid...");
+            illegal_error_will_generate_non_existing_module();
         end
     endgenerate
 

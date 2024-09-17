@@ -108,6 +108,16 @@ wire        h2f_write;
 wire        h2f_read;
 wire [7:0]  h2f_byteenable;
 
+wire        lwh2f_waitrequest;
+wire [31:0] lwh2f_readdata;
+wire        lwh2f_readdatavalid;
+wire        lwh2f_burstcount;
+wire [31:0] lwh2f_writedata;
+wire [9:0]  lwh2f_address;
+wire        lwh2f_write;
+wire        lwh2f_read;
+wire [3:0]  lwh2f_byteenable;
+
 
 wire [F2HSDRAM_ADDRW-1:0]       f2h_sdram_address;
 wire [7:0]                      f2h_sdram_burstcount;
@@ -155,19 +165,32 @@ wire                            f2h_sdram_read;
 		.msgdma_0_st_source_ready (ready),              //                   .ready
         `endif
 
-        .pll_0_165m_clk           (pixel_clk_165M           ),  //         pll_0_165m.clk
-		.pll_0_locked_export      (                         ),  //       pll_0_locked.export
+        .pll_0_165m_clk           (pixel_clk_165M           ), //         pll_0_165m.clk
+		.pll_0_locked_export      (                         ), //       pll_0_locked.export
 
-        .f2h_sdram_address        (f2h_sdram_address        ),  //    f2h_sdram.address width=27
-		.f2h_sdram_burstcount     (f2h_sdram_burstcount     ),  //             .burstcount width=8
-		.f2h_sdram_waitrequest    (f2h_sdram_waitrequest    ),  //             .waitrequest
-		.f2h_sdram_readdata       (f2h_sdram_readdata       ),  //             .readdata width=256
-		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid  ),  //             .readdatavalid
-		.f2h_sdram_read           (f2h_sdram_read           ),  //             .read
+        .f2h_sdram_address        (f2h_sdram_address        ), //    f2h_sdram.address width=27
+		.f2h_sdram_burstcount     (f2h_sdram_burstcount     ), //             .burstcount width=8
+		.f2h_sdram_waitrequest    (f2h_sdram_waitrequest    ), //             .waitrequest
+		.f2h_sdram_readdata       (f2h_sdram_readdata       ), //             .readdata width=256
+		.f2h_sdram_readdatavalid  (f2h_sdram_readdatavalid  ), //             .readdatavalid
+		.f2h_sdram_read           (f2h_sdram_read           ), //             .read
         .f2h_sdram_writedata      (64'b0), //                        .writedata
 		.f2h_sdram_byteenable     (32'b0), //                        .byteenable
 		.f2h_sdram_write          (1'b0), //                        .write
+
         .fabric_reset_in_reset    (~fabric_rst_n_syncd), // fabric_reset_in.reset
+
+        .lwh2f_bridge_waitrequest   (lwh2f_waitrequest  ), //    lwh2f_bridge.waitrequest
+		.lwh2f_bridge_readdata      (lwh2f_readdata     ), //                .readdata
+		.lwh2f_bridge_readdatavalid (lwh2f_readdatavalid), //                .readdatavalid
+		.lwh2f_bridge_burstcount    (lwh2f_burstcount   ), //                .burstcount
+		.lwh2f_bridge_writedata     (lwh2f_writedata    ), //                .writedata
+		.lwh2f_bridge_address       (lwh2f_address      ), //                .address
+		.lwh2f_bridge_write         (lwh2f_write        ), //                .write
+		.lwh2f_bridge_read          (lwh2f_read         ), //                .read
+		.lwh2f_bridge_byteenable    (lwh2f_byteenable   ), //                .byteenable
+		.lwh2f_bridge_debugaccess   (                   ), //                .debugaccess
+
 		.glob_reset_reset         (rst)  //      glob_reset.reset
 	);
 
@@ -215,7 +238,9 @@ wire                            f2h_sdram_read;
 
 
     wire [63:0] reg64data;
-    h2f_bridge_slave h2f_bridge_slave(
+    h2f_bridge_slave #(
+        .H2F_DATAWIDTH (64)
+    ) h2f_bridge_slave(
         .clk                (FPGA_CLK1_50       ),
         .rst                (rst                ),
         .waitrequest        (h2f_waitrequest    ),
@@ -228,7 +253,30 @@ wire                            f2h_sdram_read;
         .read               (h2f_read           ),
         .byteenable         (h2f_byteenable     ),
         .fabric_regsel_i    (0),
+        .fabric_regwrite_i  (),
+        .fabric_regdata_i   (),
         .fabric_regdata_o   (reg64data)
+    );
+
+    wire [31:0] reg32data;
+    h2f_bridge_slave #(
+        .H2F_DATAWIDTH (32)
+    ) lwh2f_bridge_slave(
+        .clk                (FPGA_CLK1_50       ),
+        .rst                (rst                ),
+        .waitrequest        (lwh2f_waitrequest  ),
+        .readdata           (lwh2f_readdata     ),
+        .readdatavalid      (lwh2f_readdatavalid),
+        .burstcount         (lwh2f_burstcount   ),
+        .writedata          (lwh2f_writedata    ),
+        .address            (lwh2f_address      ),
+        .write              (lwh2f_write        ),
+        .read               (lwh2f_read         ),
+        .byteenable         (lwh2f_byteenable   ),
+        .fabric_regsel_i    (0),
+        .fabric_regwrite_i  (),
+        .fabric_regdata_i   (),
+        .fabric_regdata_o   (reg32data)
     );
 
     wire pixel_announce;
@@ -242,7 +290,7 @@ wire                            f2h_sdram_read;
         .sdram_clk              (FPGA_CLK1_50           ),
         .pixel_clk              (pixel_clk_165M         ),
         .rst                    (rst                    ),
-        .frame_ready_i          (reg64data[0]           ), // bit 0 of register 0 is used to trigger start of read
+        .frame_ready_i          (reg32data[16]          ), // bit 0 of register 0 is used to trigger start of read
         .first_fill_flag_o      (pixel_announce         ),
         .sdram_address_o        (f2h_sdram_address      ),
         .sdram_burstcount_o     (f2h_sdram_burstcount   ),

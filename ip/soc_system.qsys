@@ -33,11 +33,19 @@
          type = "int";
       }
    }
-   element msgdma_0
+   element mm_bridge_1
    {
       datum _sortIndex
       {
          value = "3";
+         type = "int";
+      }
+   }
+   element msgdma_0
+   {
+      datum _sortIndex
+      {
+         value = "4";
          type = "int";
       }
    }
@@ -53,7 +61,7 @@
    {
       datum _sortIndex
       {
-         value = "4";
+         value = "5";
          type = "int";
       }
    }
@@ -61,7 +69,7 @@
    {
       datum _sortIndex
       {
-         value = "5";
+         value = "6";
          type = "int";
       }
    }
@@ -102,20 +110,11 @@
    internal="reset_bridge_0.out_reset_1"
    type="reset"
    dir="start" />
- <interface
-   name="hps_0_f2h_axi_slave"
-   internal="hps_0.f2h_axi_slave"
-   type="axi"
-   dir="end" />
+ <interface name="hps_0_f2h_axi_slave" internal="hps_0.f2h_axi_slave" />
  <interface name="hps_0_f2h_cold_reset_req" internal="hps_0.f2h_cold_reset_req" />
  <interface name="hps_0_f2h_debug_reset_req" internal="hps_0.f2h_debug_reset_req" />
  <interface name="hps_0_f2h_stm_hw_events" internal="hps_0.f2h_stm_hw_events" />
  <interface name="hps_0_f2h_warm_reset_req" internal="hps_0.f2h_warm_reset_req" />
- <interface
-   name="hps_0_h2f_lw_axi_master"
-   internal="hps_0.h2f_lw_axi_master"
-   type="axi"
-   dir="start" />
  <interface
    name="hps_0_h2f_reset"
    internal="hps_0.h2f_reset"
@@ -123,6 +122,11 @@
    dir="start" />
  <interface name="hps_0_hps_io" internal="hps_0.hps_io" />
  <interface name="hps_bridge" internal="mm_bridge_0.m0" type="avalon" dir="start" />
+ <interface
+   name="lwh2f_bridge"
+   internal="mm_bridge_1.m0"
+   type="avalon"
+   dir="start" />
  <interface name="memory" internal="hps_0.memory" type="conduit" dir="end" />
  <interface name="msgdma_0_st_source" internal="msgdma_0.st_source" />
  <interface name="pll_0_165m" internal="pll_0.outclk0" type="clock" dir="start" />
@@ -229,7 +233,7 @@
   <parameter name="ENABLE_USER_ECC" value="false" />
   <parameter name="EXPORT_AFI_HALF_CLK" value="false" />
   <parameter name="EXTRA_SETTINGS" value="" />
-  <parameter name="F2H_AXI_CLOCK_FREQ" value="50000000" />
+  <parameter name="F2H_AXI_CLOCK_FREQ" value="100" />
   <parameter name="F2H_SDRAM0_CLOCK_FREQ" value="50000000" />
   <parameter name="F2H_SDRAM1_CLOCK_FREQ" value="100" />
   <parameter name="F2H_SDRAM2_CLOCK_FREQ" value="100" />
@@ -246,7 +250,7 @@
   <parameter name="F2SDRAM_Type">Avalon-MM Bidirectional</parameter>
   <parameter name="F2SDRAM_Width" value="256" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
-  <parameter name="F2S_Width" value="2" />
+  <parameter name="F2S_Width" value="0" />
   <parameter name="FIX_READ_LATENCY" value="8" />
   <parameter name="FORCED_NON_LDC_ADDR_CMD_MEM_CK_INVERT" value="false" />
   <parameter name="FORCED_NUM_WRITE_FR_CYCLE_SHIFTS" value="0" />
@@ -681,6 +685,24 @@
   <parameter name="USE_AUTO_ADDRESS_WIDTH" value="0" />
   <parameter name="USE_RESPONSE" value="0" />
  </module>
+ <module
+   name="mm_bridge_1"
+   kind="altera_avalon_mm_bridge"
+   version="23.1"
+   enabled="1">
+  <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
+  <parameter name="ADDRESS_WIDTH" value="10" />
+  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="LINEWRAPBURSTS" value="0" />
+  <parameter name="MAX_BURST_SIZE" value="1" />
+  <parameter name="MAX_PENDING_RESPONSES" value="4" />
+  <parameter name="PIPELINE_COMMAND" value="1" />
+  <parameter name="PIPELINE_RESPONSE" value="1" />
+  <parameter name="SYMBOL_WIDTH" value="8" />
+  <parameter name="SYSINFO_ADDR_WIDTH" value="10" />
+  <parameter name="USE_AUTO_ADDRESS_WIDTH" value="1" />
+  <parameter name="USE_RESPONSE" value="0" />
+ </module>
  <module name="msgdma_0" kind="altera_msgdma" version="23.1" enabled="0">
   <parameter name="AUTO_DESCRIPTOR_READ_MASTER_ADDRESS_MAP" value="" />
   <parameter
@@ -965,18 +987,23 @@
   <parameter name="baseAddress" value="0x0020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
+ <connection
+   kind="avalon"
+   version="23.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="mm_bridge_1.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <connection kind="clock" version="23.1" start="clk_0.clk" end="mm_bridge_0.clk" />
  <connection
    kind="clock"
    version="23.1"
    start="clk_0.clk"
    end="reset_bridge_0.clk" />
+ <connection kind="clock" version="23.1" start="clk_0.clk" end="mm_bridge_1.clk" />
  <connection kind="clock" version="23.1" start="clk_0.clk" end="msgdma_0.clock" />
- <connection
-   kind="clock"
-   version="23.1"
-   start="clk_0.clk"
-   end="hps_0.f2h_axi_clock" />
  <connection
    kind="clock"
    version="23.1"
@@ -1020,6 +1047,11 @@
    version="23.1"
    start="reset_bridge_0.out_reset"
    end="mm_bridge_0.reset" />
+ <connection
+   kind="reset"
+   version="23.1"
+   start="reset_bridge_0.out_reset"
+   end="mm_bridge_1.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>

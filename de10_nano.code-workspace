@@ -10,5 +10,9 @@
 			"path": "../hdl_sandbox/rtl_lib"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"ratio": "cpp"
+		}
+	}
 }
